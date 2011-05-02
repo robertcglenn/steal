@@ -285,6 +285,7 @@
 		steals = {},
 		// the current steal
 		firstSteal,
+		startOver = true,
 		// the defines in the current 'load'
 		defines = [];
 		
@@ -484,7 +485,8 @@
 	steal = function() {
 		//set the inital
 		var createdFirst = false;
-		if(!cur){
+		if(startOver){
+			startOver = false;
 			firstSteal = cur = new steal.fn.init();
 			createdFirst = true;
 		}
@@ -614,6 +616,7 @@
 		complete : function(){
 			if(this === firstSteal){ // this is the last steal
 				cur = null;
+				startOver = true;
 			}
 			this.completeTimeout && clearTimeout(this.completeTimeout)
 		},

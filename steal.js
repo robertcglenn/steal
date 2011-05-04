@@ -1614,6 +1614,7 @@
 			if (jQueryIncremented) {
                 jQ.readyWait -= 1;
             }
+			jQ.ready();
 		}
 	});
 	//for integration with other build types

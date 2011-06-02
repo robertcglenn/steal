@@ -52,7 +52,7 @@
 		},
 		support = {
 			error: !win.document || "error" in scriptTag(),
-			useInteractive: "attachEvent" in scriptTag()
+			interactive: win.document && "attachEvent" in scriptTag()
 		},
 		startup = function(){},
 		oldsteal = win.steal,
@@ -293,14 +293,12 @@
 				rootSrc = stel.options.rootSrc;
 				
 			if(stel.unique && rootSrc){
-				if(!steals[rootSrc]){  //if we haven't loaded it before
+				// the .js is b/c we are not adding that automatically until
+				// load because we defer 'type' determination until then
+				if(!steals[rootSrc] && ! steals[rootSrc+".js"]){  //if we haven't loaded it before
 					steals[rootSrc] = stel;
 				} else{
 					stel = steals[rootSrc];
-					// something else wants to load this file, so start loading it
-					if(!stel.loading && !stel.hasLoaded){
-						stel.load();
-					}
 				}
 			}
 			
@@ -341,7 +339,7 @@
 						// call the function, someday soon this will be requireJS-like
 						options(steal.send || win.jQuery || steal); 
 					},
-					src: path,
+					rootSrc: path,
 					orig: options,
 					type: "fn"
 				}
@@ -360,10 +358,7 @@
 				this.unique = true;
 			}
 		},
-		complete : function(){
-			// mark other scripts that we're done for other scripts
-			this.hasLoaded = true;
-		},
+		complete : function(){},
 		/**
 		 * @hide
 		 * After the script has been loaded and run
@@ -375,7 +370,7 @@
 		loaded: function(myqueue){
 			//check if jQuery has been loaded
 			//mark yourself as current
-			File.cur(this.options && this.options.src);
+			File.cur(this.options && this.options.rootSrc);
 			
 			if(!myqueue){
 				myqueue = pending.slice(0);
@@ -392,14 +387,27 @@
 			// now we have to figure out how to wire up our steals
 			var self = this,
 				set = [],
-				start = this, // the current 
+				joiner, // the current 
 				stel,
 				initial = [],
-				isProduction = steal.options.env == 'production';
+				isProduction = steal.options.env == 'production',
+				files = [],
+				whenEach = function(arr, func, obj, func2){
+					var big = [obj, func2];
+					each(arr, function(i, item){
+						big.unshift(item, func)
+					});
+					when.apply(steal, big);
+				},
+				whenThe = function(obj, func, items, func2){
+					each(items, function(i, item){
+						when(obj, func, item, func2)
+					})
+				};
 			
 			
 			//now go through what you stole and hook everything up
-			each(myqueue, function(i, item){
+			each(myqueue.reverse(), function(i, item){
 				//check for ignored before even making ...
 				if(isProduction && item.ignore){
 					return;
@@ -408,49 +416,65 @@
 				// make a steal object
 				stel = steal.p.make( item );
 				
-				// if this is a script already finished loading, don't add it as a dependency
-				if(stel.hasLoaded){
-					return;
-				}
-				
 				// add it as a dependency, circular are not allowed
-				self.dependencies.push(stel)
+				self.dependencies.unshift(stel)
 				
 				
 				if(stel.waits === false){ // file
 					// on the current 
-					set.push(stel,"complete");
-					
-					if(start ===self){ // we are the first files, we need to start loading right now
-						initial.push(stel)
-					}else{
-						// start is some thing els, load ourselves once it is complete
-						when(start,"complete",stel,"load")
-					}
-					
+					files.push(stel);					
 				}else{ // function
 					
-					if(!initial.length){ //if we start with a function
-						initial.push(stel)
-					} else {
-						// load me when everything prior to me is complete
-						set.push(stel, "load");
-						when.apply(steal,set);
-					}
+					// essentially have to bind current files to call previous joiner's load
+					// and to wait for current stel's complete
 					
-					set = [stel, "complete"];
-					start = stel;
+					if(!joiner){
+						
+						// when they are complete, complete me
+						whenEach(files.length ? files : [stel], "complete", self, "complete");
+						
+						// if there was a function then files, then end, function loads all files
+						if(files.length){
+							whenThe(stel,"complete", files ,"load")
+						}
+						
+					} else { //   function,  file1, file2, file3, joiner function
+						
+						whenEach(files.length ? files : [stel], "complete", joiner, "load");
+						
+						// make stel complete load files
+						whenThe(stel,"complete", files.length ? files : [joiner] ,"load")
+						
+						
+						
+					}
+					joiner = stel;
+					files = [];
 					
 				}
-			})
-			//tell last set, or last function to call complete ...
-			
-			set.push(self, "complete");
-			when.apply(steal,set);
-			
-			each(initial, function(){
-				this.load();
 			});
+			
+			if(files.length){
+				//we have initial files
+				// if there is a joiner, we need to load it when the initial files are complete
+				//console.log(this.options && this.options.src, files, joiner )
+				if(joiner){
+					whenEach(files, "complete", joiner, "load");
+				} else {
+					whenEach(files, "complete", self, "complete");
+				}
+				
+				each(files, function(){
+					this.load();
+				});
+			} else if(joiner){
+				// we have inital function
+				joiner.load()
+			} else {
+				self.complete();
+			}
+
+			
 		},
 		/**
 		 * When the script loads, 
@@ -515,7 +539,9 @@
 			rhino: win.load && win.readUrl && win.readFile
 		},
 		options : {
-			env : 'development'
+			env : 'development',
+			// TODO: document this
+			loadProduction : true
 		},
 		/**
 		 * when a 'unique' steal gets added ...
@@ -529,12 +555,14 @@
 		 * @param {Object} options
 		 */
 		makeOptions : function(options){
-			var normalized = steal.File(options.src).normalize();
+			
+			var orig = options.src,
+				normalized = steal.File(orig).normalize();
 			extend(options,{
 				originalSrc : options.src,
 				rootSrc : normalized,
 				src : steal.root.join(normalized)
-			})
+			});
 			options.originalSrc = options.src;
 			return options;
 		},
@@ -556,14 +584,19 @@
 			if(!events[event]){
 				events[event] = [] 
 			}
-			events[event].push(listener)
+			var special = steal.events[event]
+			if(special && special.add){
+				listener = special.add(listener);
+			}
+			listener && events[event].push(listener)
 		},
 		one : function(event, listener){
 			steal.bind(event,function(){
-				listener.call(this, arguments);
+				listener.apply(this, arguments);
 				steal.unbind(arguments.callee);
 			})
 		},
+		events : {},
 		unbind : function(event, listener){
 			var evs = events[event] || [],
 				i = 0;
@@ -579,6 +612,32 @@
 			each(events[event] || [], function(i,f){
 				f(arg);
 			})
+		},
+		/**
+		 * @hide
+		 * Used to tell steal that it is loading a number of plugins
+		 */
+		loading : function(){
+			for(var i =0; i< arguments.length;i++){
+				var stel = steal.p.make( arguments[i] );
+				stel.loading = true;
+			}
+
+		},
+		// called when a script has loaded via production
+		loaded: function(name){
+			// console.log("LOADED "+name)
+			//get other steals
+			//basically create each one ... mark it as loading
+			//  load each one
+			var stel = steal.p.make( name );
+			stel.loading = true;
+			var myqueue = pending.slice(0);
+			pending = [];
+
+			stel.loaded(myqueue)
+
+			return steal;
 		}
 	});
 	var events = {};
@@ -621,8 +680,18 @@
 			convert: typs
 		};
 	};
-	// adds a type (js by default)
-	steal.makeOptions = before(steal.makeOptions,function(raw){
+	// adds a type (js by default) and buildType (css, js)
+	// this should happen right before loading
+	// however, what if urls are different 
+	// because one file has JS and another does not?
+	// we could check if it matches something with .js because foo.less.js SHOULD
+	// be rare
+	//steal.makeOptions = before(steal.makeOptions,function(raw){
+		
+	//});
+	steal.p.load = before(steal.p.load, function(){
+		var raw = this.options;
+		
 		// if it's a string, get it's extension and check if
 		// it is a registered type, if it is ... set the type
 		if(!raw.type){
@@ -633,14 +702,17 @@
 			}
 			raw.type =  ext;
 		}
-		//test this, and then test append, then continue other convert stuff
-	})
+		var converters =  types[raw.type].convert;
+		raw.buildType = converters.length ? converters[converters.length - 1] : raw.type;
+	});
 	
 	// loads a single file, given a src (or text)
 	steal.require = function(options, original, success, error){
+		// get the type
 		var type = types[options.type],
 			converters;
 		
+		// if this has converters, make it get the text first, then pass it to the type
 		if(type.convert.length){
 			converters = type.convert.slice(0);
 			converters.unshift('text', options.type)
@@ -648,7 +720,7 @@
 			converters = [options.type]
 		}
 		require(options, original, converters, success, error)
-	}
+	};
 	function require(options, original, converters, success, error){
 		
 		var type = types[converters.shift()];
@@ -680,13 +752,15 @@ steal.type("js", function(options,original, success, error){
 	if (options.text) {
 		// insert
 		script.text = options.text;
+		
 	}
 	else {
+		
 		var callback = function(evt){
 		
 			if (!script.readyState || stateCheck.test(script.readyState)) {
 				//				cleanUp(script);
-				if (support.useInteractive) {
+				if (support.interactive) {
 					deps = interactives[script.src] || [];
 				}
 				success(script, deps)
@@ -720,10 +794,11 @@ steal.type("text", function(options, original, success, error){
 		options.text = text;
 		success(text);
 	}, error)
-})
+});
 
 steal.type("css", function(options, original, success, error){
 	if(options.text){
+		var css  = document.createElement('style')
 		if (css.styleSheet) { // IE
             css.styleSheet.cssText = options.text;
 	    } else {
@@ -737,6 +812,7 @@ steal.type("css", function(options, original, success, error){
 	            }
 	        })(document.createTextNode(options.text));
 	    }
+		head().appendChild(css);
 	} else {
 		options = options || {};
 		var link = doc[STR_CREATE_ELEMENT]('link');
@@ -756,7 +832,7 @@ steal.type("css", function(options, original, success, error){
 			steal.type(type, opts.types[type]);
 		}
 	}
-}())
+}());
 
 
 // =============================== HELPERS ===============================
@@ -803,7 +879,7 @@ steal.request = function(options, success, error){
 		clean();
 	}
 			 
-}
+};
 
 
 
@@ -822,15 +898,15 @@ steal.request = function(options, success, error){
 			}
 		}
 		return p;
-	}
+	};
 	File.prototype.mapJoin = function( url ){
 		url = insertMapping(url);
 		return File(url).joinFrom(this.path);
-	}
+	};
 	// modifies src
 	steal.makeOptions = after(steal.makeOptions,function(raw){
 		raw.src = steal.root.join(raw.rootSrc = insertMapping(raw.rootSrc));
-	})
+	});
 	
 	//root mappings to other locations
 	steal.mappings = {};
@@ -870,16 +946,18 @@ steal.request = function(options, success, error){
 		after: function(){
 			if(! currentCollection ){
 				currentCollection = new steal.p.init();
+				// keep a reference in case it dissappears 
 				
-				var go = function(){
-					currentCollection.loaded();
-					// let anyone listening to a start, start
-					steal.trigger("start", currentCollection);
-					when(currentCollection,"complete", function(){
-						steal.trigger("end", currentCollection);
-					})
-				}
-				
+				var cur = currentCollection,
+					go = function(){
+					
+						// let anyone listening to a start, start
+						steal.trigger("start", cur);
+						when(cur,"complete", function(){
+							steal.trigger("end", cur);
+						});
+						cur.loaded();
+					};
 				// this needs to change for old way ....
 				if(!win.setTimeout){
 					go()
@@ -888,7 +966,6 @@ steal.request = function(options, success, error){
 				}
 			}
 		},
-		done : function(){},
 		_before : before,
 		_after: after
 	});
@@ -926,8 +1003,7 @@ steal.request = function(options, success, error){
 		// once the current batch is done, fire ready if it hasn't already been done
 		steal.bind('end', function(){
 			if (jQueryIncremented && !ready) {
-	            jQ.readyWait -= 1;
-				jQ.ready();
+				jQ.ready(true);
 				ready = true;
 	        }
 		})
@@ -982,32 +1058,50 @@ steal.request = function(options, success, error){
 				var me = arguments.callee,
 					ret;
 				
-				//if we are a callee, and have been called, decrement the number of calls
-				if(me.calls !== undefined){
-					me.calls--;
+				// call the original function
+				ret = oldFunc.apply(ob,arguments)
+				var cbs = me.callbacks,
+					len = cbs.length;
+				
+				//mark as called so any callees added to this caller will
+				//automatically get called
+				me.called = true;
+				// call other callbacks
+				for(var i =0; i < len; i++){
+					cbs[i].called()
 				}
-				//if we have been called the right number of times, or are not a callee
-				if( me.calls === 0 || me.calls === undefined ) {
-					// call the original function
-					ret = oldFunc.apply(ob,arguments)
-					var cbs = me.callbacks,
-						len = cbs.length;
-					
-					//mark as called so any callees added to this caller will
-					//automatically get called
-					me.called = true;
-					// call other callbacks
-					for(var i =0; i < len; i++){
-						cbs[i].obj[cbs[i].func](ob)
-					}
-					return ret;
-				}
+				return ret;
+				
 			}
 			ob[func].callbacks = [];
 		}
 
 		return ob[func];
 	};
+	function join(obj, meth){
+		this.obj = obj;
+		this.meth = meth;
+		convert(obj, meth)
+		this.calls = 0
+	}
+	extend(join.prototype,{
+		called : function(){
+			this.calls--;
+			this.go();
+		},
+		add : function(obj, meth){
+			var f = convert(obj, meth)
+			if(!f.called){
+				f.callbacks.push(this);
+				this.calls++;
+			}
+		},
+		go : function(){
+			if(this.calls === 0){
+				this.obj[this.meth]()
+			}
+		}
+	})
 	// chains two functions.  When the first one is called,
 	//   it calls the second function.
 	//   If the second function has multiple callers, it waits until all have been called
@@ -1027,27 +1121,14 @@ steal.request = function(options, success, error){
 		
 		var waitMeth = args.pop(), 
 			waitObj = args.pop(),
-			f2 = convert(waitObj, waitMeth),
-			f; 
+			joined = new join(waitObj, waitMeth); 
 		
-
 		for(var i =0; i < args.length; i = i+2){
-			f = convert(args[i], args[i+1]);
-			
-			if(! f.called){
-				// push the callee to be called later
-				f.callbacks.push({
-					obj : waitObj,
-					func: waitMeth
-				});
-				f2.calls = (f2.calls || 0 )+1;
-			}
+			joined.add(args[i], args[i+1])
 		}
 		
-		// call right away 
-		if(!f2.calls){
-			waitObj[waitMeth](waitObj)
-		}
+		// call right away if it should
+		joined.go();
 	}
 	
 	// =========== DEBUG =========
@@ -1055,7 +1136,7 @@ steal.request = function(options, success, error){
 		if(stel.options && stel.options.type == "fn"){
 			return stel.options.orig.toString().substr(0,50)
 		}
-		return stel.options ? stel.options.src : "CONTAINER"
+		return stel.options ? stel.options.rootSrc : "CONTAINER"
 	}
 	
 	/**steal.p.load = before(steal.p.load, function(){
@@ -1081,16 +1162,30 @@ steal.request = function(options, success, error){
 	var loaded = {
 		load : function(){},
 		end : function(){}
-	}
+	};
+	
+	firstEnd = false;
 	addEvent(win, "load", function(){
 		loaded.load();
 	});
-	steal.one("end", function(){
-		loaded.end()
+	steal.one("end", function(collection){
+		loaded.end();
+		firstEnd = collection;
 	})
 	when(loaded,"load",loaded,"end", function(){
 		steal.trigger("ready")
-	})
+	});
+	
+	steal.events.done = {
+		add : function(cb){
+			if(firstEnd){
+				cb(firstEnd);
+				return false;
+			} else {
+				return cb;
+			}
+		}
+	};
 	
 	// =========== INTERACTIVE STUFF ===========
 	
@@ -1114,7 +1209,7 @@ var interactiveScript,
 	    return null;
 	}
 
-if (support.useInteractive) {
+if (support.interactive) {
 
 	// after steal is called, check which script is "interactive" (for IE)
 	steal.after = after(steal.after, function(){
@@ -1176,26 +1271,19 @@ if (support.useInteractive) {
 					options.env = "production";
 				}
 				if ( src.indexOf('?') !== -1 ) {
+					
 					scriptOptions = src.split('?')[1];
 					commaSplit = scriptOptions.split(",");
 					
-					// if it looks like steal[xyz]=bar, add those to the options
-					if ( scriptOptions.indexOf('=') > -1 ) {
-						scriptOptions.replace(/steal\[([^\]]+)\]=([^&]+)/g, function( whoe, prop, val ) {
-							options[prop] = val;
-						});
-					} else {
-						//set with comma style
-						commaSplit = scriptOptions.split(",");
-						if ( commaSplit[0] && commaSplit[0].lastIndexOf('.js') > 0 ) {
-							options.startFile = commaSplit[0];
-						} else if ( commaSplit[0] ) {
-							options.app = commaSplit[0];
-						}
-						if ( commaSplit[1] && steal.options.env != "production" ) {
-							options.env = commaSplit[1];
-						}
+					if ( commaSplit[0] && commaSplit[0].lastIndexOf('.js') > 0 ) {
+						options.startFile = commaSplit[0];
+					} else if ( commaSplit[0] ) {
+						options.app = commaSplit[0];
 					}
+					if ( commaSplit[1] && steal.options.env != "production" ) {
+						options.env = commaSplit[1];
+					}
+					
 				}
 			
 			}

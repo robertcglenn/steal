@@ -293,7 +293,9 @@
 				rootSrc = stel.options.rootSrc;
 				
 			if(stel.unique && rootSrc){
-				if(!steals[rootSrc]){  //if we haven't loaded it before
+				// the .js is b/c we are not adding that automatically until
+				// load because we defer 'type' determination until then
+				if(!steals[rootSrc] && ! steals[rootSrc+".js"]){  //if we haven't loaded it before
 					steals[rootSrc] = stel;
 				} else{
 					stel = steals[rootSrc];
@@ -385,14 +387,27 @@
 			// now we have to figure out how to wire up our steals
 			var self = this,
 				set = [],
-				start = this, // the current 
+				joiner, // the current 
 				stel,
 				initial = [],
-				isProduction = steal.options.env == 'production';
+				isProduction = steal.options.env == 'production',
+				files = [],
+				whenEach = function(arr, func, obj, func2){
+					var big = [obj, func2];
+					each(arr, function(i, item){
+						big.unshift(item, func)
+					});
+					when.apply(steal, big);
+				},
+				whenThe = function(obj, func, items, func2){
+					each(items, function(i, item){
+						when(obj, func, item, func2)
+					})
+				};
 			
 			
 			//now go through what you stole and hook everything up
-			each(myqueue, function(i, item){
+			each(myqueue.reverse(), function(i, item){
 				//check for ignored before even making ...
 				if(isProduction && item.ignore){
 					return;
@@ -402,43 +417,64 @@
 				stel = steal.p.make( item );
 				
 				// add it as a dependency, circular are not allowed
-				self.dependencies.push(stel)
+				self.dependencies.unshift(stel)
 				
 				
 				if(stel.waits === false){ // file
 					// on the current 
-					set.push(stel,"complete");
-					
-					if(start ===self){ // we are the first files, we need to start loading right now
-						initial.push(stel)
-					}else{
-						// start is some thing els, load ourselves once it is complete
-						when(start,"complete",stel,"load")
-					}
-					
+					files.push(stel);					
 				}else{ // function
 					
-					if(!initial.length){ //if we start with a function
-						initial.push(stel)
-					} else {
-						// load me when everything prior to me is complete
-						set.push(stel, "load");
-						when.apply(steal,set);
-					}
+					// essentially have to bind current files to call previous joiner's load
+					// and to wait for current stel's complete
 					
-					set = [stel, "complete"];
-					start = stel;
+					if(!joiner){
+						
+						// when they are complete, complete me
+						whenEach(files.length ? files : [stel], "complete", self, "complete");
+						
+						// if there was a function then files, then end, function loads all files
+						if(files.length){
+							whenThe(stel,"complete", files ,"load")
+						}
+						
+					} else { //   function,  file1, file2, file3, joiner function
+						
+						whenEach(files.length ? files : [stel], "complete", joiner, "load");
+						
+						// make stel complete load files
+						whenThe(stel,"complete", files.length ? files : [joiner] ,"load")
+						
+						
+						
+					}
+					joiner = stel;
+					files = [];
 					
 				}
-			})
-			//tell last set, or last function to call complete ...
-			
-			set.push(self, "complete");
-			when.apply(steal,set);
-			
-			each(initial, function(){
-				this.load();
 			});
+			
+			if(files.length){
+				//we have initial files
+				// if there is a joiner, we need to load it when the initial files are complete
+				//console.log(this.options && this.options.src, files, joiner )
+				if(joiner){
+					whenEach(files, "complete", joiner, "load");
+				} else {
+					whenEach(files, "complete", self, "complete");
+				}
+				
+				each(files, function(){
+					this.load();
+				});
+			} else if(joiner){
+				// we have inital function
+				joiner.load()
+			} else {
+				self.complete();
+			}
+
+			
 		},
 		/**
 		 * When the script loads, 
@@ -645,7 +681,17 @@
 		};
 	};
 	// adds a type (js by default) and buildType (css, js)
-	steal.makeOptions = before(steal.makeOptions,function(raw){
+	// this should happen right before loading
+	// however, what if urls are different 
+	// because one file has JS and another does not?
+	// we could check if it matches something with .js because foo.less.js SHOULD
+	// be rare
+	//steal.makeOptions = before(steal.makeOptions,function(raw){
+		
+	//});
+	steal.p.load = before(steal.p.load, function(){
+		var raw = this.options;
+		
 		// if it's a string, get it's extension and check if
 		// it is a registered type, if it is ... set the type
 		if(!raw.type){
@@ -706,6 +752,7 @@ steal.type("js", function(options,original, success, error){
 	if (options.text) {
 		// insert
 		script.text = options.text;
+		
 	}
 	else {
 		
@@ -751,6 +798,7 @@ steal.type("text", function(options, original, success, error){
 
 steal.type("css", function(options, original, success, error){
 	if(options.text){
+		var css  = document.createElement('style')
 		if (css.styleSheet) { // IE
             css.styleSheet.cssText = options.text;
 	    } else {
@@ -764,6 +812,7 @@ steal.type("css", function(options, original, success, error){
 	            }
 	        })(document.createTextNode(options.text));
 	    }
+		head().appendChild(css);
 	} else {
 		options = options || {};
 		var link = doc[STR_CREATE_ELEMENT]('link');
@@ -1083,7 +1132,7 @@ steal.request = function(options, success, error){
 		if(stel.options && stel.options.type == "fn"){
 			return stel.options.orig.toString().substr(0,50)
 		}
-		return stel.options ? stel.options.src : "CONTAINER"
+		return stel.options ? stel.options.rootSrc : "CONTAINER"
 	}
 	
 	/**steal.p.load = before(steal.p.load, function(){

@@ -52,7 +52,7 @@
 		},
 		support = {
 			error: !win.document || "error" in scriptTag(),
-			useInteractive: "attachEvent" in scriptTag()
+			interactive: win.document && "attachEvent" in scriptTag()
 		},
 		startup = function(){},
 		oldsteal = win.steal,
@@ -297,10 +297,6 @@
 					steals[rootSrc] = stel;
 				} else{
 					stel = steals[rootSrc];
-					// something else wants to load this file, so start loading it
-					if(!stel.loading && !stel.hasLoaded){
-						stel.load();
-					}
 				}
 			}
 			
@@ -341,7 +337,7 @@
 						// call the function, someday soon this will be requireJS-like
 						options(steal.send || win.jQuery || steal); 
 					},
-					src: path,
+					rootSrc: path,
 					orig: options,
 					type: "fn"
 				}
@@ -360,10 +356,7 @@
 				this.unique = true;
 			}
 		},
-		complete : function(){
-			// mark other scripts that we're done for other scripts
-			this.hasLoaded = true;
-		},
+		complete : function(){},
 		/**
 		 * @hide
 		 * After the script has been loaded and run
@@ -375,7 +368,7 @@
 		loaded: function(myqueue){
 			//check if jQuery has been loaded
 			//mark yourself as current
-			File.cur(this.options && this.options.src);
+			File.cur(this.options && this.options.rootSrc);
 			
 			if(!myqueue){
 				myqueue = pending.slice(0);
@@ -407,11 +400,6 @@
 				
 				// make a steal object
 				stel = steal.p.make( item );
-				
-				// if this is a script already finished loading, don't add it as a dependency
-				if(stel.hasLoaded){
-					return;
-				}
 				
 				// add it as a dependency, circular are not allowed
 				self.dependencies.push(stel)
@@ -515,7 +503,9 @@
 			rhino: win.load && win.readUrl && win.readFile
 		},
 		options : {
-			env : 'development'
+			env : 'development',
+			// TODO: document this
+			loadProduction : true
 		},
 		/**
 		 * when a 'unique' steal gets added ...
@@ -529,12 +519,14 @@
 		 * @param {Object} options
 		 */
 		makeOptions : function(options){
-			var normalized = steal.File(options.src).normalize();
+			
+			var orig = options.src,
+				normalized = steal.File(orig).normalize();
 			extend(options,{
 				originalSrc : options.src,
 				rootSrc : normalized,
 				src : steal.root.join(normalized)
-			})
+			});
 			options.originalSrc = options.src;
 			return options;
 		},
@@ -556,14 +548,19 @@
 			if(!events[event]){
 				events[event] = [] 
 			}
-			events[event].push(listener)
+			var special = steal.events[event]
+			if(special && special.add){
+				listener = special.add(listener);
+			}
+			listener && events[event].push(listener)
 		},
 		one : function(event, listener){
 			steal.bind(event,function(){
-				listener.call(this, arguments);
+				listener.apply(this, arguments);
 				steal.unbind(arguments.callee);
 			})
 		},
+		events : {},
 		unbind : function(event, listener){
 			var evs = events[event] || [],
 				i = 0;
@@ -579,6 +576,32 @@
 			each(events[event] || [], function(i,f){
 				f(arg);
 			})
+		},
+		/**
+		 * @hide
+		 * Used to tell steal that it is loading a number of plugins
+		 */
+		loading : function(){
+			for(var i =0; i< arguments.length;i++){
+				var stel = steal.p.make( arguments[i] );
+				stel.loading = true;
+			}
+
+		},
+		// called when a script has loaded via production
+		loaded: function(name){
+			// console.log("LOADED "+name)
+			//get other steals
+			//basically create each one ... mark it as loading
+			//  load each one
+			var stel = steal.p.make( name );
+			stel.loading = true;
+			var myqueue = pending.slice(0);
+			pending = [];
+
+			stel.loaded(myqueue)
+
+			return steal;
 		}
 	});
 	var events = {};
@@ -621,7 +644,7 @@
 			convert: typs
 		};
 	};
-	// adds a type (js by default)
+	// adds a type (js by default) and buildType (css, js)
 	steal.makeOptions = before(steal.makeOptions,function(raw){
 		// if it's a string, get it's extension and check if
 		// it is a registered type, if it is ... set the type
@@ -633,14 +656,17 @@
 			}
 			raw.type =  ext;
 		}
-		//test this, and then test append, then continue other convert stuff
-	})
+		var converters =  types[raw.type].convert;
+		raw.buildType = converters.length ? converters[converters.length - 1] : raw.type;
+	});
 	
 	// loads a single file, given a src (or text)
 	steal.require = function(options, original, success, error){
+		// get the type
 		var type = types[options.type],
 			converters;
 		
+		// if this has converters, make it get the text first, then pass it to the type
 		if(type.convert.length){
 			converters = type.convert.slice(0);
 			converters.unshift('text', options.type)
@@ -648,7 +674,7 @@
 			converters = [options.type]
 		}
 		require(options, original, converters, success, error)
-	}
+	};
 	function require(options, original, converters, success, error){
 		
 		var type = types[converters.shift()];
@@ -682,11 +708,12 @@ steal.type("js", function(options,original, success, error){
 		script.text = options.text;
 	}
 	else {
+		
 		var callback = function(evt){
 		
 			if (!script.readyState || stateCheck.test(script.readyState)) {
 				//				cleanUp(script);
-				if (support.useInteractive) {
+				if (support.interactive) {
 					deps = interactives[script.src] || [];
 				}
 				success(script, deps)
@@ -720,7 +747,7 @@ steal.type("text", function(options, original, success, error){
 		options.text = text;
 		success(text);
 	}, error)
-})
+});
 
 steal.type("css", function(options, original, success, error){
 	if(options.text){
@@ -756,7 +783,7 @@ steal.type("css", function(options, original, success, error){
 			steal.type(type, opts.types[type]);
 		}
 	}
-}())
+}());
 
 
 // =============================== HELPERS ===============================
@@ -803,7 +830,7 @@ steal.request = function(options, success, error){
 		clean();
 	}
 			 
-}
+};
 
 
 
@@ -822,15 +849,15 @@ steal.request = function(options, success, error){
 			}
 		}
 		return p;
-	}
+	};
 	File.prototype.mapJoin = function( url ){
 		url = insertMapping(url);
 		return File(url).joinFrom(this.path);
-	}
+	};
 	// modifies src
 	steal.makeOptions = after(steal.makeOptions,function(raw){
 		raw.src = steal.root.join(raw.rootSrc = insertMapping(raw.rootSrc));
-	})
+	});
 	
 	//root mappings to other locations
 	steal.mappings = {};
@@ -870,16 +897,18 @@ steal.request = function(options, success, error){
 		after: function(){
 			if(! currentCollection ){
 				currentCollection = new steal.p.init();
+				// keep a reference in case it dissappears 
 				
-				var go = function(){
-					currentCollection.loaded();
-					// let anyone listening to a start, start
-					steal.trigger("start", currentCollection);
-					when(currentCollection,"complete", function(){
-						steal.trigger("end", currentCollection);
-					})
-				}
-				
+				var cur = currentCollection,
+					go = function(){
+					
+						// let anyone listening to a start, start
+						steal.trigger("start", cur);
+						when(cur,"complete", function(){
+							steal.trigger("end", cur);
+						});
+						cur.loaded();
+					};
 				// this needs to change for old way ....
 				if(!win.setTimeout){
 					go()
@@ -888,7 +917,6 @@ steal.request = function(options, success, error){
 				}
 			}
 		},
-		done : function(){},
 		_before : before,
 		_after: after
 	});
@@ -1081,16 +1109,30 @@ steal.request = function(options, success, error){
 	var loaded = {
 		load : function(){},
 		end : function(){}
-	}
+	};
+	
+	firstEnd = false;
 	addEvent(win, "load", function(){
 		loaded.load();
 	});
-	steal.one("end", function(){
-		loaded.end()
+	steal.one("end", function(collection){
+		loaded.end();
+		firstEnd = collection;
 	})
 	when(loaded,"load",loaded,"end", function(){
 		steal.trigger("ready")
-	})
+	});
+	
+	steal.events.done = {
+		add : function(cb){
+			if(firstEnd){
+				cb(firstEnd);
+				return false;
+			} else {
+				return cb;
+			}
+		}
+	};
 	
 	// =========== INTERACTIVE STUFF ===========
 	
@@ -1114,7 +1156,7 @@ var interactiveScript,
 	    return null;
 	}
 
-if (support.useInteractive) {
+if (support.interactive) {
 
 	// after steal is called, check which script is "interactive" (for IE)
 	steal.after = after(steal.after, function(){
@@ -1176,26 +1218,19 @@ if (support.useInteractive) {
 					options.env = "production";
 				}
 				if ( src.indexOf('?') !== -1 ) {
+					
 					scriptOptions = src.split('?')[1];
 					commaSplit = scriptOptions.split(",");
 					
-					// if it looks like steal[xyz]=bar, add those to the options
-					if ( scriptOptions.indexOf('=') > -1 ) {
-						scriptOptions.replace(/steal\[([^\]]+)\]=([^&]+)/g, function( whoe, prop, val ) {
-							options[prop] = val;
-						});
-					} else {
-						//set with comma style
-						commaSplit = scriptOptions.split(",");
-						if ( commaSplit[0] && commaSplit[0].lastIndexOf('.js') > 0 ) {
-							options.startFile = commaSplit[0];
-						} else if ( commaSplit[0] ) {
-							options.app = commaSplit[0];
-						}
-						if ( commaSplit[1] && steal.options.env != "production" ) {
-							options.env = commaSplit[1];
-						}
+					if ( commaSplit[0] && commaSplit[0].lastIndexOf('.js') > 0 ) {
+						options.startFile = commaSplit[0];
+					} else if ( commaSplit[0] ) {
+						options.app = commaSplit[0];
 					}
+					if ( commaSplit[1] && steal.options.env != "production" ) {
+						options.env = commaSplit[1];
+					}
+					
 				}
 			
 			}

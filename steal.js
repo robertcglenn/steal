@@ -268,7 +268,11 @@
 
 			if (/^\/\//.test(this.path) ) { //if path is rooted from steal's root 
 				path = this.path.substr(2);
-
+			
+			} else if(/^\.\//.test(this.path) ){ // should be relative
+				this.path = this.path.substr(2);
+				path = this.joinFrom(current);
+				this.path = "./"+this.path;
 			} else if ( this.relative() 
 					|| (File.cur().isCrossDomain() && //if current file is on another domain and
 						!this.protocol()) ) { //this file doesn't have a protocol
@@ -513,6 +517,7 @@
 				return steal.root.path;
 			}
 		},
+		extend : extend,
 		pageUrl : function(newPage){
 			if(newPage){
 				page = File( File(newPage).clean() );
@@ -763,7 +768,8 @@ steal.type("js", function(options,original, success, error){
 				if (support.interactive) {
 					deps = interactives[script.src] || [];
 				}
-				success(script, deps)
+				success(script, deps);
+				script.parentNode.removeChild(script);
 			}
 		}
 		if (script.attachEvent) {
@@ -852,7 +858,7 @@ steal.request = function(options, success, error){
 				if ( request.status === 500 || request.status === 404 || 
 				     request.status === 2 || 
 					 (request.status === 0 && request.responseText === '') ) {
-					error();
+					error && error();
 					clean();
 				} else {
 					success(request.responseText);
@@ -875,7 +881,7 @@ steal.request = function(options, success, error){
 		request.send(null);
 	}
 	catch (e) {
-		error();
+		error && error();
 		clean();
 	}
 			 
@@ -1296,7 +1302,6 @@ if (support.interactive) {
 			if(typeof oldsteal == 'object'){
 				extend(steal.options, oldsteal);
 			}
-			
 			// CALCULATE CURRENT LOCATION OF THINGS ...
 			steal.rootUrl(steal.options.rootUrl);
 			

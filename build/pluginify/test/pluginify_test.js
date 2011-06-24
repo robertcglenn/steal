@@ -2,8 +2,8 @@
 /**
  * Tests compressing a very basic page and one that is using steal
  */
-load('steal/rhino/steal.js')
-steal.plugins('steal/test','steal/build/pluginify').then( function( s ) {
+load('steal/rhino/rhino.js')
+steal.plugins('steal/test','steal/build', 'steal/build/pluginify').then( function( s ) {
 	STEALPRINT = false;
 	s.test.module("steal/build/pluginify")
 	
@@ -25,6 +25,7 @@ steal.plugins('steal/test','steal/build/pluginify').then( function( s ) {
 		var firstFunc = steal.build.pluginify.getFunction(js, 0);
 		//print(firstFunc);
 	})
+
 	s.test.test("parse", function(t){
 		var js = readFile('jquery/class/class.js');
 		var tokens = js.tokens('=<>!+-*&|/%^', '=<>&|');
@@ -48,7 +49,5 @@ steal.plugins('steal/test','steal/build/pluginify').then( function( s ) {
 		var tokens = js.tokens('=<>!+-*&|/%^', '=<>&|');
 		
 	});
-	
-	s.test.test("pluginify with views")	
 	
 });

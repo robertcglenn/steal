@@ -18,7 +18,7 @@ var utils = steal.instrument.utils,
 extend(steal.instrument, {
 	// keep track of all current instrumentation data (also stored in localStorage)
 	files: {},
-	ignores: steal.options.instrumentIgnore || utils.parentWin().steal.options.instrumentIgnore || [],
+	ignores: steal.options.instrument || utils.parentWin().steal.instrument.ignores || [],
 	compileStats: function(){
 		var cov = utils.parentWin().steal.instrument.files;
 		var stats = {

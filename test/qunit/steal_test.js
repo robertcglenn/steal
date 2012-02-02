@@ -11,7 +11,16 @@ module("steal")
 	};
 	
 	
-	
+if(window !== window.parent && window.parent.QUnit){
+	var methods = ["module", "test", "start", "stop", "equals", "ok", "same", "equal", "expect"];
+	for(var i=0; i<methods.length; i++){
+		(function(method){
+			window[method] = function(){
+				window.parent[method].apply(this, arguments);
+			}
+		})(methods[i])
+	}
+}
 
 // testing new steal API
 	
@@ -631,8 +640,8 @@ test("File.ext", function(){
 		
 		var options = steal.getScriptOptions(script);
 		
-		equals(options.rootUrl, url,"root url is right");
-		equals(options.startFile,"foo","app right");
+		equals(options.rootUrl+'', url+'',"root url is right");
+		equals(options.startFile+'',"foo","app right");
 		
 		script.src = "../steal.js?bar.js";
 
@@ -640,8 +649,8 @@ test("File.ext", function(){
 		
 		url = F(script.src).protocol() ?   F( F(script.src).dir() ).dir()+"/" : "../../";
 		
-		equals(options.rootUrl, url,"root url is right");
-		equals(options.startFile,"bar.js","app right");
+		equals(options.rootUrl+'', url+'',"root url is right");
+		equals(options.startFile+'',"bar.js","app right");
 		
 	})
 

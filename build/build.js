@@ -126,8 +126,13 @@ steal(function( steal ) {
 				}
 			}
 			if(steal.build.builders.scripts){
-				steal.build.builders.scripts(opener, options, dependencies);
-			}
+				try {
+					steal.build.builders.scripts(opener, options, dependencies);
+				} catch(e) {
+					console.log('error building scripts', e);
+					quit(1);
+				}
+ 			}
 		});
 
 		

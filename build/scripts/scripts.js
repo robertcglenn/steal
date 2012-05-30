@@ -278,12 +278,18 @@ steal('steal/build', 'steal/parse').then(function( steal ) {
 
 				var outBaos = new java.io.ByteArrayOutputStream(),
 					output = new java.io.PrintStream(outBaos);
-					
-				runCommand("node", "steal/build/scripts/uglify/bin/uglifyjs", origFileName,
+				
+				steal.print('about to execute uglify command');
+				
+				var exitCode = runCommand("node", "steal/build/scripts/uglify/bin/uglifyjs", origFileName,
 					{ output: output }
 				);
 			
 				origFile.remove();
+				
+				if(exitCode !== 0) {
+					throw "Uglifier exited with non-zero exit code " + exitCode;
+				}
 
 				return outBaos.toString();
 			};

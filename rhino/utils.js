@@ -27,7 +27,7 @@
 	runCommand = function(shell, shellCmd, cmd){
 		var fileRegex = /([^\s]|\/)+\.\w+/g // anything with a slash, no space, and a period
 		cmd = cmd.replace(fileRegex, pathFromRoot);
-		oldRunCommand(shell, shellCmd, cmd);
+		return oldRunCommand(shell, shellCmd, cmd);
 	}
 		
 	load = function( path ) {

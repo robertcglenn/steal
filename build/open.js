@@ -163,9 +163,11 @@ steal(function(s){
 			})
 		};
 		
-		Envjs.onScriptLoadError = function(script, e){
-			Envjs.reportError(e);
-		    //console.log('error loading script %s %s', script, e);
+		//enable fail-fast mode
+		var re = Envjs.reportError;
+		Envjs.reportError = function() {
+			re.apply(Envjs, arguments);
+			//console.log('error loading script %s %s', script, e);
 			quit(1);
 		};
 		

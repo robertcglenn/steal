@@ -2113,6 +2113,7 @@
 			}
 			// either instrument is in this page (if we're the window opened from steal.browser), or its opener has it
 			try {
+				/*
 				if ((win.top && win.top.opener && win.top.opener.steal && win.top.opener.steal.instrument) || 
 					(win.top && win.top.steal && win.top.steal.instrument) ) {
 					// force startFiles to load before instrument
@@ -2121,6 +2122,7 @@
 						waits: true
 					});
 				}
+				 */
 			} catch(e){
 				// This would throw permission denied if 
 				// the child window was from a different domain

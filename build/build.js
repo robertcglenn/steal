@@ -94,7 +94,7 @@ steal(function( steal ) {
 	 *     </table>
 	 */
 	steal.build = function( url, options ) {
-		var dependencies = {}, dep;
+		var dependencies = {}, dep,
 
 		//convert options (which might be an array) into an object
 		options = steal.opts(options || {}, {
@@ -104,6 +104,9 @@ steal(function( steal ) {
 			to: 1
 		});
 
+		options = steal.opts(_args || {}, {});
+		steal.print(_args, options.compress)
+
 		// to is the folder packages will be put in
 		options.to = options.to || (url.match(/https?:\/\//) ? "" : url.substr(0, url.lastIndexOf('/')));
 
@@ -112,6 +115,7 @@ steal(function( steal ) {
 			options.to += "/";
 		}
 
+		return;
 		steal.print("Building to " + options.to);
 
 		var opener = steal.build.open(url, function(opener){

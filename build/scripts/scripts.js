@@ -40,7 +40,11 @@ steal('steal/build', 'steal/parse').then(function( steal ) {
 					var compressed = currentCollection.join("\n");
 					// clean out any remove-start style comments
 					compressed = scripts.clean(compressed);
-					compressed = compressor(compressed, true, currentLineMap);
+
+					steal.print(options.compress)
+					if(options.compress) {
+						compressed = compressor(compressed, true, currentLineMap);
+					}
 					currentCollection = [];
 					return compressed;
 				}

@@ -94,15 +94,30 @@ steal(function( steal ) {
 	 *     </table>
 	 */
 	steal.build = function( url, options ) {
-		var dependencies = {}, dep;
+		var dependencies = {}, dep,
+
+		//TODO: this is reduntant if using buildjs. we should find a
+		//more elegant way for command line overrides of a build script:
+		//js path/to/build.js -compress -otherOptions
+		opts = steal.opts(_args || {}, {
+			to: 1,
+			//TODO: although the single option is the most elegant
+			//for bools, this is backwards from the pluginify option "-compress"
+			nocompress: 0
+		});
 
 		//convert options (which might be an array) into an object
 		options = steal.opts(options || {}, {
-			//compress everything, regardless of what you find
-			all: 1,
 			//folder to build to, defaults to the folder the page is in
-			to: 1
+			to: 1,
+			//defaults to compression
+			nocompress: 0
 		});
+
+		//TODO: do we have merge helpers?
+		for(var o in opts) {
+			options[o] = opts[o];
+		}
 
 		// to is the folder packages will be put in
 		options.to = options.to || (url.match(/https?:\/\//) ? "" : url.substr(0, url.lastIndexOf('/')));
@@ -112,6 +127,7 @@ steal(function( steal ) {
 			options.to += "/";
 		}
 
+		return;
 		steal.print("Building to " + options.to);
 
 		var opener = steal.build.open(url, function(opener){

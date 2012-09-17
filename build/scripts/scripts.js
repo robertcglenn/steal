@@ -41,8 +41,7 @@ steal('steal/build', 'steal/parse').then(function( steal ) {
 					// clean out any remove-start style comments
 					compressed = scripts.clean(compressed);
 
-					steal.print(options.compress)
-					if(options.compress) {
+					if(!options.nocompress) {
 						compressed = compressor(compressed, true, currentLineMap);
 					}
 					currentCollection = [];
@@ -89,7 +88,7 @@ steal('steal/build', 'steal/parse').then(function( steal ) {
 				}
 				currentPackage = packages[pack];
 			}
-			
+
 			// if we should compress the script, compress it
 			if ( stl.compress !== false || options.all ) {
 				currentPackage.scripts.push("'"+stl.rootSrc+"'")

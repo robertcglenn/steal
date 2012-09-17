@@ -381,7 +381,7 @@
 				//move helper
 				helper = options[name].helper || name.substr(0, 1);
 
-				options[helper] = options[name]
+				options[helper] = options[name];
 			}
 		})();
 		var latest, def;

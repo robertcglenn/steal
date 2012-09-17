@@ -401,7 +401,6 @@
 				}
 
 			}
-			steal.print('file ', latest, args[i])
 		}
 
 		return opts;

@@ -127,7 +127,6 @@ steal(function( steal ) {
 			options.to += "/";
 		}
 
-		return;
 		steal.print("Building to " + options.to);
 
 		var opener = steal.build.open(url, function(opener){

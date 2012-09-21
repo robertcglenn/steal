@@ -90,7 +90,7 @@
 
 
 steal.instrument = {};
-steal("./parser.js").then("./process.js", "./utils.js", function(){
+steal("./parser.js").then("./process.js", "./utils.js", "./reporters.js", function(){
 
 var utils = steal.instrument.utils,
 	origJSConverter = steal.types.js.require,

@@ -4,71 +4,6 @@
 * html .ui-helper-clearfix { height:1%; }
 .ui-helper-clearfix { display:block; }
 
-/*************** TABS ***************/
-#tabs-container
-{
-	background: #EEE;
-	background: -webkit-gradient(linear, 0% 100%, 0% 0%, color-stop(0, #CCC), color-stop(0.8, #EEE));
-	background: -moz-linear-gradient(center bottom, #CCC 0%, #EEE 80%) repeat scroll 0 0;
-	border: 1px solid #BBB;
-	border-left: none;
-	border-right: none;
-	display: block;
-	padding: 10px;
-	z-index: 5;
-	height:20px;
-	cursor: pointer;
-}
-	
-#tabs-container .btn-tab 
-{
-	background: #CCC;
-	background: -webkit-gradient(linear, 0% 100%, 0% 0%, color-stop(0, #D4D4D4), color-stop(0.8, #F0F0F0));
-	background: -moz-linear-gradient(center bottom, #D4D4D4 0%, #F0F0F0 80%) repeat scroll 0 0;
-	border: 1px solid #BBB;
-	color: #555;
-	float: left;
-	font-size: 13px;
-	font-weight: bold;
-	line-height: 1em;
-	margin: 0 2px 0 0;
-	padding: 8px 18px;
-	text-align: center;
-	text-decoration: none;
-	text-shadow: 0px 1px 0px white;
-	-moz-border-radius: 6px 6px 0 0;
-	-webkit-border-radius: 6px 6px 0 0;
-	-o-border-radius: 6px 6px 0 0;
-	-ms-border-radius: 6px 6px 0 0;
-	-khtml-border-radius: 6px 6px 0 0;
-	text-decoration:none;
-	border-radius: 6px 6px 0 0;
-	text-decoration:none;
-}
-#tabs-container .btn-tab.btn-pressed 
-{
-	background: white !important;
-	border-bottom: 1px solid white;
-	color: #444;
-}
-#tabs-container .btn-tab.btn-hidden
-{
-	display:none;
-}
-
-#tabs-container .file-options{
-	display:none;
-}
-
-#tabs-container .file-options, 
-#tabs-container .run-options
-{
-	float:right;
-	margin-top:3px;
-}
-
-
-
 /*************** Coverage Wrappers ***************/
 .coverage-wrapper
 {
@@ -295,25 +230,6 @@
 	background:#feaaa7;
 }
 
-label.ignore {
-	display: block;
-	line-height: 25px;
-	height: 25px;
-}
-
-.ignored-wrapper {
-	float: left;
-	width: 20%;
-}
-.ignored-wrapper input[type=text] {
-	font-size: 16px;
-	display: block;
-	width: 90%;
-	margin: 1px 0 2px;
-	height: 26px;
-	padding: 0 3px;
-	line-height: 26px;
-}
 .covered-wrapper {
 	width: 80%;
 	float: left;

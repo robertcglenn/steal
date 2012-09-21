@@ -21,11 +21,6 @@ steal('./reporters.css').then(function(){
 				"		<h2>Total Block Coverage</h2>"+
 				"	</div>"+
 				"</div>"+
-				"<div class='ignored-wrapper'>"+
-					"<h2>Ignored Files<span id='rerun'>Rerun</span></h2>"+ 
-					"<form id='ignores'>"+
-					"</form>"+
-				"</div>"+
 				"<div class='covered-wrapper'>"+
 				"<h2>Covered files</h2>"+
 				"<table id='report' cellspacing='0' cellpadding='0'>"+
@@ -52,43 +47,8 @@ steal('./reporters.css').then(function(){
 				'	</div>'+
 				'</div>'+
 				'<table id="file" cellspacing="0" cellpadding="0">',
-			tabs = '<a href="#" class="btn-tab" id="test-tab">Test Results</a>'+
-				'<a href="#" class="btn-tab btn-pressed" id="report-tab">Coverage Results</a>'+
-				'<a href="#" class="btn-tab btn-hidden" id="file-tab">Lines Covered</a>',
-			// map from tabId to pane element IDs
-			tabEls = {
-				'test-tab': ['qunit-testrunner-toolbar', 'qunit-userAgent', 'qunit-testresult', 'qunit-tests', 'qunit-test-area'],
-				'report-tab': ['report-wrapper'],
-				'file-tab': ['files-wrapper']
-			},
 			$ = function(id){
 				return document.getElementById(id);
-			},
-			clickTab = function(tabId){
-				window.scrollTo(0,0);
-				for(var tab in tabEls){
-					if(tab !== tabId){
-						if(/hidden/.test($(tab).className)){
-							continue;
-						}
-						$(tab).className = "btn-tab";
-						for(var i=0; i<tabEls[tab].length; i++){
-							var el = $(tabEls[tab][i]);
-							if(el){
-								el.style.display = "none";
-							}
-						}
-					} else {
-						$(tab).className = "btn-tab btn-pressed";
-						for(var i=0; i<tabEls[tab].length; i++){
-							var el = $(tabEls[tab][i]);
-							if(el){
-								el.style.display = "";
-							}
-						}
-					}
-					
-				}
 			},
 			data;
 		
@@ -147,30 +107,6 @@ steal('./reporters.css').then(function(){
 			el.querySelector('.total-line-coverage .chart').innerHTML = '<img height="150" width="150" src="http://chart.apis.google.com/chart?chs=150x150&cht=pc&chco=0E51A2,BBCCED&chd=t:0|' + totalLine +',' + (100 - totalLine) + '&chma=|2,3" />';
 			el.querySelector('.total-block-coverage .chart').innerHTML = '<img height="150" width="150" src="http://chart.apis.google.com/chart?chs=150x150&cht=pc&chco=0E51A2,BBCCED&chd=t:0|' + totalBlock + ',' + (100 - totalBlock) + '&chma=|2,3" />';
 			
-			var tabsEl = document.createElement('div');
-			tabsEl.id = "tabs-container";
-			tabsEl.innerHTML = tabs;
-			
-			document.body.insertBefore(tabsEl, document.getElementById("qunit-testrunner-toolbar"));
-			clickTab('report-tab');
-			
-			
-			// add ignores
-	
-			var buildIgnoresForm = function(){
-				var ignoresHTML = ""; 
-				for(var i=0;i<steal.instrument.ignores.length; i++){
-					ignoresHTML += "<label class='ignore'><input id='newignore' type='checkbox' checked='checked' value='"+steal.instrument.ignores[i]+"' /> " +steal.instrument.ignores[i]+"</label>"
-				}
-				$("ignores").innerHTML = "<input id='newignore' type='text' />" + ignoresHTML;
-			}
-	
-			buildIgnoresForm();
-	
-			
-				
-				
-			
 			var el = document.createElement("div");
 			el.id = 'files-wrapper';
 			document.body.appendChild(el);
@@ -184,15 +120,6 @@ steal('./reporters.css').then(function(){
 					fn();
 				}
 			}
-			addEvent($('test-tab'), "click", function(){
-				clickTab('test-tab');
-			})
-			addEvent($('report-tab'), "click", function(){
-				clickTab('report-tab');
-			})
-			addEvent($('file-tab'), "click", function(){
-				clickTab('file-tab');
-			})
 			addEvent($("report"), "click", function(ev){
 				ev.preventDefault();
 				if(ev.target.className == "file"){
@@ -201,31 +128,6 @@ steal('./reporters.css').then(function(){
 				}
 			})
 			i = 0;
-			addEvent($("ignores"), "change", function(ev){
-				ev.preventDefault();
-				var input = ev.target,
-					type = input.type;
-	
-				if(type == 'text'){
-					var index = steal.instrument.ignores.indexOf(input.value);
-					if(index == -1){
-						steal.instrument.ignores.push(ev.target.value);
-					}
-				} else if(type == "checkbox"){
-					var index = steal.instrument.ignores.indexOf(input.value);
-					if(index != -1){
-						steal.instrument.ignores.splice(index,1);
-					}
-				}
-				console.log(steal.instrument.ignores)
-				buildIgnoresForm();
-			})
-			addEvent($('rerun'), 'click', function(){
-				window.location = QUnit.url({ "steal[instrument]": steal.instrument.ignores.join(",") });
-			})
-			addEvent($("ignores"), "submit", function(ev){
-				ev.preventDefault();
-			})
 		}
 		
 		var showFile = function(fileName){
@@ -237,7 +139,7 @@ steal('./reporters.css').then(function(){
 				tr = [],
 				lines;
 				
-			$("file-tab").innerHTML = fileName;
+			$("report").innerHTML = fileName;
 			
 			for(var i=0; i<fileArr.length; i++){
 				var hits = typeof linesUsed[i] == "number"? linesUsed[i] : 0,
@@ -264,8 +166,6 @@ steal('./reporters.css').then(function(){
 			el.querySelector('.total-block-coverage .stat').innerHTML = totalBlock + "%";
 			el.querySelector('.total-line-coverage .chart').innerHTML = '<img height="150" width="150" src="http://chart.apis.google.com/chart?chs=150x150&cht=pc&chco=0E51A2,BBCCED&chd=t:0|' + totalLine +',' + (100 - totalLine) + '&chma=|2,3" />';
 			el.querySelector('.total-block-coverage .chart').innerHTML = '<img height="150" width="150" src="http://chart.apis.google.com/chart?chs=150x150&cht=pc&chco=0E51A2,BBCCED&chd=t:0|' + totalBlock + ',' + (100 - totalBlock) + '&chma=|2,3" />';
-			
-			clickTab('file-tab');
 		}
 		coverage(stats)
 	}

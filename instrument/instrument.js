@@ -86,14 +86,14 @@
  * - Remote files (not on the same domain) are skipped because they can't be loaded via AJAX.
  * 
  */
+if(!steal.instrument){
+	steal.instrument = {};
+}
 
-
-
-steal.instrument = {};
 steal("./parser.js").then("./process.js", "./utils.js", function(){
 
 var utils = steal.instrument.utils,
-	origJSConverter = steal.types.js.require,
+	origJSConverter = steal.config().types.js.require,
 	extend = function(orig, newO){
 		for(var k in newO){
 			orig[k] = newO[k];
@@ -269,7 +269,8 @@ extend(steal.instrument, {
 	},
 	jsConvert: function(options, success, error){
 		var files = utils.parentWin().steal.instrument.files,
-			fileName = options.rootSrc,
+			file = options.src,
+			fileName = file.path,
 			instrumentation = files[fileName],
 			processInstrumentation = function(instrumentation){
 				var code = instrumentation.instrumentedCode;
@@ -278,19 +279,16 @@ extend(steal.instrument, {
 				utils.globalEval(code);
 				success();
 			}
-		if(utils.shouldIgnore(fileName) ||  
-			options.type != "js" || 
-			// if both are file: URLs its fine, otherwise make sure its the same domain
-			(!(location.protocol == "file:" && steal.File(options.originalSrc).protocol() == "file:") &&
-				location.host !== steal.File(options.originalSrc).domain())){
+		
+		if(utils.shouldIgnore(fileName) || file.ext() != "js"){
 			return origJSConverter.apply(this, arguments);
-		}	
+		}
+		
 		if(instrumentation){
 			processInstrumentation(instrumentation)
 			return;
 		}
-		
-		
+
 		steal.request(options, function(text){
 			// check cache first
 			var fileHash = utils.hashCode(text),
@@ -331,7 +329,7 @@ if(typeof steal.instrument.ignores === "string"){
 for(var i=0; i<steal.instrument.ignores.length; i++){
 	if(steal.instrument.ignores[i] === "!jmvc"){
 		// remove it and add jmvc files
-		steal.instrument.ignores.splice(i, 1, "jquery","funcunit","steal","documentjs","*/test","*_test.js", "*funcunit.js", "mxui");
+		steal.instrument.ignores.splice(i, 1, "/can", "/jquery","/funcunit","/steal","/documentjs","*/test","*_test.js", "*funcunit.js");
 		
 	}
 }

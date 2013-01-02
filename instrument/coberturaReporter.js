@@ -204,7 +204,7 @@
         }
     };
 
-    function createReport(coverageData) {
+    function createReport(coverageData, basePath) {
         var files= getFiles(coverageData);
 
         var ar= [];
@@ -213,6 +213,9 @@
         var packages = _createPackages(files);
         ar.push( createCoverageLine(packages) );
         X.append(ar, '<sources>', 1);
+        if(basePath){
+          X.append(ar, '<source>' + basePath + '</source>', 2);
+        }
         X.append(ar, '</sources>', 1);
 
         appendPackages(ar, packages);

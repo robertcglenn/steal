@@ -229,13 +229,17 @@
     function printDebug(ar, files){
         dumpObject(ar, files, 'files', 10);
         dumpObject(ar, files['clui/clui.js'].linesUsed, 'files["clui/clui.js"].linesUsed');
-        dumpObject(ar, files['clui/hub/hub.js'].linesUsed, 'files["clui/hub/hub.js"].linesUsed');
+
+        var hubjs = files['clui/hub/hub.js'];
+        var hubjsSummary= {lineCoverage: hubjs.lineCoverage, blockCoverage:hubjs.blockCoverage, lines:hubjs.lines, blocks:hubjs.blocks};
+        dumpObject(ar, hubjsSummary, 'files["clui/hub/hub.js"]');
+        dumpObject(ar, hubjs.linesUsed, 'files["clui/hub/hub.js"].linesUsed');
     }
 
     function createReport(coverageData, basePath) {
         var ar= [];
         var files= getFiles(coverageData);
-//        printDebug(ar, files);
+        //printDebug(ar, files);
 
         ar.push(X.header0);
         ar.push(X.header1);

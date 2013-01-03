@@ -24,42 +24,29 @@ steal('steal/instrument/coberturaReporter.js', function() {
         }
     }
 
-    function createCoverageData() {
-        return {
-            files: {
-                'p1/f1.js': createFileData(8, 2, 4),
-                'p1/f2.js': createFileData(10, 0),
-                'p1/f3.js': createFileData(0, 10),
-                'p2/f4.js': createFileData(6, 4),
-                'p2/p3/f5.js': createFileData(4, 6),
-                'p2/p3/f6.js': createFileData(2, 8)
-            },
-            total: {
-                lineCoverage: 0.5,
-                blockCoverage: -1,
-                lines: 60,
-                blocks: -1
-            }
-        }
-    }
-
 	describe('_createClassInfo', function() {
         var _createClassInfo= steal.instrument.coberturaReporter._createClassInfo;
 
 		it('given a file name and its data, it will create class and line info', function() {
-            var classInfo= _createClassInfo('p1/f1.js', createFileData(2, 1));
+            var classInfo= _createClassInfo('p1/f1.js', createFileData(2, 1, 3));
             expect(classInfo.name).toBe('p1.f1');
             expect(classInfo.filename).toBe('p1/f1.js');
             expect(classInfo.lineRate).toBeCloseTo(0.66, 0.001);
             expect(classInfo.branchRate).toBe('1.0');
             expect(classInfo.complexity).toBe('1.0');
+            expect(classInfo.linesCovered).toBe(2);
+            expect(classInfo.linesOfCode).toBe(3);
+            expect(classInfo.linesTotal).toBe(6);
 
             expect(classInfo.methods).toEqual([]);
-            expect(classInfo.lines.length).toBe(2);
+            expect(classInfo.lines.length).toBe(3);
             expect(classInfo.lines[0].number).toBe(0);
             expect(classInfo.lines[0].hits).toBe(1);
             expect(classInfo.lines[0].branch).toBe(false);
             expect(classInfo.lines[1].number).toBe(1);
+            expect(classInfo.lines[1].hits).toBe(1);
+            expect(classInfo.lines[2].number).toBe(5);
+            expect(classInfo.lines[2].hits).toBe(0);
         })
 	});
 
@@ -190,6 +177,25 @@ steal('steal/instrument/coberturaReporter.js', function() {
             expect(lines[7]).toBe('</coverage>');
         });
 
+        it('creates empty report for no files with sources if basePath provided', function() {
+            var basePath= '/basePath/';
+            var xml= createReport({}, basePath);
+            var lines = xml.split('\n');
+            expect(lines[0]).toBe('<?xml version="1.0"?>');
+            expect(lines[1]).toBe('<!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">');
+            var coverageLine = lines[2];
+            coverageLine = coverageLine.substring(0, coverageLine.indexOf(' timestamp='));
+            expect(coverageLine).toBe('<coverage line-rate="0.0" branch-rate="1.0" lines-covered="0" lines-valid="0" branches-covered="0" branches-valid="0" complexity="1.0" version="1.9.4.1"');
+
+            expect(lines[3]).toBe('\t<sources>');
+            expect(lines[4]).toBe('\t\t<source>/basePath/</source>');
+            expect(lines[5]).toBe('\t</sources>');
+
+            expect(lines[6]).toBe('\t<packages>');
+            expect(lines[7]).toBe('\t</packages>');
+            expect(lines[8]).toBe('</coverage>');
+        });
+
         it('creates a report for one class when given one file', function() {
             var files = {
                 'p1/f1.js': createFileData(2, 2, 3)
@@ -211,13 +217,15 @@ steal('steal/instrument/coberturaReporter.js', function() {
             expect(lines[10]).toBe('\t\t\t\t\t<lines>');
             expect(lines[11]).toBe('\t\t\t\t\t\t<line number="0" hits="1" branch="false"></line>');
             expect(lines[12]).toBe('\t\t\t\t\t\t<line number="1" hits="1" branch="false"></line>');
+            expect(lines[13]).toBe('\t\t\t\t\t\t<line number="5" hits="0" branch="false"></line>');
+            expect(lines[14]).toBe('\t\t\t\t\t\t<line number="6" hits="0" branch="false"></line>');
 
-            expect(lines[13]).toBe('\t\t\t\t\t</lines>');
-            expect(lines[14]).toBe('\t\t\t\t</class>');
-            expect(lines[15]).toBe('\t\t\t</classes>');
-            expect(lines[16]).toBe('\t\t</package>');
-            expect(lines[17]).toBe('\t</packages>');
-            expect(lines[18]).toBe('</coverage>');
+            expect(lines[15]).toBe('\t\t\t\t\t</lines>');
+            expect(lines[16]).toBe('\t\t\t\t</class>');
+            expect(lines[17]).toBe('\t\t\t</classes>');
+            expect(lines[18]).toBe('\t\t</package>');
+            expect(lines[19]).toBe('\t</packages>');
+            expect(lines[20]).toBe('</coverage>');
         });
 
     });

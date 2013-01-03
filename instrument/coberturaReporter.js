@@ -38,8 +38,8 @@
         r.branchRate = '1.0';
         r.complexity = '1.0';
 
-        r.linesCovered = r.lines.length;
-        r.linesOfCode = r.lines.linesUsedLength;
+        r.linesCovered = r.lines.linesCovered;
+        r.linesOfCode = r.lines.linesOfCode;
         r.linesTotal = fileCoverageData.lines;
         r.lineRate = r.linesCovered / r.linesOfCode;
         return r;
@@ -55,14 +55,15 @@
 
     function createLines(linesUsed) {
         linesUsed = sortLinesUsed(linesUsed);
-        var lines= [];
-
-        linesUsed.forEach(function(line) {
-            if (line.hits !== 0) {
-                lines.push(createLine(line.i, line.hits));
-            }
+        var linesCovered= 0, linesOfCode=0;
+        var lines= linesUsed.map(function(line) {
+            linesOfCode++;
+            if (line.hits > 0) linesCovered++;
+            return createLine(line.i, line.hits);
         });
-        lines.linesUsedLength = linesUsed.length;
+
+        lines.linesCovered = linesCovered;
+        lines.linesOfCode = linesOfCode;
         return lines;
     }
 
@@ -194,6 +195,14 @@
             return ar.join('');
         },
 
+        createTagEnd: function(tag) {
+            return '</' + tag + '>';
+        },
+
+        createTag: function(tag, value, attributes) {
+            return X.createTagStart(tag, attributes) + value + X.createTagEnd(tag);
+        },
+
         tab: function(indent) {
             if (!indent || indent===0) return '';
             return S.repeat('\t', indent);
@@ -204,10 +213,30 @@
         }
     };
 
-    function createReport(coverageData, basePath) {
-        var files= getFiles(coverageData);
+    function dumpObject(array, object, name, maxElements) {
+        maxElements = maxElements || 9007199254740992; // max integer
+        array.push(X.createTagStart(name, {}) );
+        var counter=0;
+        for (var i in object) {
+            counter++;
+            if (counter>maxElements) break;
+            var val = object[i];
+            array.push('\t' + X.createTag(i, val, {}));
+        }
+        array.push(X.createTagEnd(name));
+    }
 
+    function printDebug(ar, files){
+        dumpObject(ar, files, 'files', 10);
+        dumpObject(ar, files['clui/clui.js'].linesUsed, 'files["clui/clui.js"].linesUsed');
+        dumpObject(ar, files['clui/hub/hub.js'].linesUsed, 'files["clui/hub/hub.js"].linesUsed');
+    }
+
+    function createReport(coverageData, basePath) {
         var ar= [];
+        var files= getFiles(coverageData);
+//        printDebug(ar, files);
+
         ar.push(X.header0);
         ar.push(X.header1);
         var packages = _createPackages(files);
@@ -299,7 +328,7 @@
     function createLineXml(ar, line) {
         var lineStart = X.createTagStart('line', {
             number: line.number,
-            hits: 1,
+            hits: line.hits,
             branch: false
         });
         X.append(ar, lineStart + '</line>', 6);

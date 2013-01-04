@@ -71,7 +71,8 @@
         var ar= [];
         for (var i in linesUsed) {
             var hits = linesUsed[i];
-            ar.push({i:i, hits:hits});
+            var lineNumber = parseInt(i, 10) + 1;
+            ar.push({i:lineNumber, hits:hits});
         }
         return ar.sort(function(a,b){
             return a.i - b.i;

@@ -40,12 +40,12 @@ steal('steal/instrument/coberturaReporter.js', function() {
 
             expect(classInfo.methods).toEqual([]);
             expect(classInfo.lines.length).toBe(3);
-            expect(classInfo.lines[0].number).toBe(0);
+            expect(classInfo.lines[0].number).toBe(1);
             expect(classInfo.lines[0].hits).toBe(1);
             expect(classInfo.lines[0].branch).toBe(false);
-            expect(classInfo.lines[1].number).toBe(1);
+            expect(classInfo.lines[1].number).toBe(2);
             expect(classInfo.lines[1].hits).toBe(1);
-            expect(classInfo.lines[2].number).toBe(5);
+            expect(classInfo.lines[2].number).toBe(6);
             expect(classInfo.lines[2].hits).toBe(0);
         })
 	});
@@ -215,10 +215,10 @@ steal('steal/instrument/coberturaReporter.js', function() {
             expect(lines[8]).toBe('\t\t\t\t<class name="p1.f1" filename="p1/f1.js" line-rate="0.5" branch-rate="1.0" complexity="1.0">');
             expect(lines[9]).toBe('\t\t\t\t\t<methods></methods>');
             expect(lines[10]).toBe('\t\t\t\t\t<lines>');
-            expect(lines[11]).toBe('\t\t\t\t\t\t<line number="0" hits="1" branch="false"></line>');
-            expect(lines[12]).toBe('\t\t\t\t\t\t<line number="1" hits="1" branch="false"></line>');
-            expect(lines[13]).toBe('\t\t\t\t\t\t<line number="5" hits="0" branch="false"></line>');
-            expect(lines[14]).toBe('\t\t\t\t\t\t<line number="6" hits="0" branch="false"></line>');
+            expect(lines[11]).toBe('\t\t\t\t\t\t<line number="1" hits="1" branch="false"></line>');
+            expect(lines[12]).toBe('\t\t\t\t\t\t<line number="2" hits="1" branch="false"></line>');
+            expect(lines[13]).toBe('\t\t\t\t\t\t<line number="6" hits="0" branch="false"></line>');
+            expect(lines[14]).toBe('\t\t\t\t\t\t<line number="7" hits="0" branch="false"></line>');
 
             expect(lines[15]).toBe('\t\t\t\t\t</lines>');
             expect(lines[16]).toBe('\t\t\t\t</class>');

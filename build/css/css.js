@@ -25,11 +25,6 @@ steal('steal',function( steal ) {
 		var directory = steal.File(where).dir(),
 			srcs = [], codez = [];
 
-        var paths = steal.config('paths');
-        for(path in paths) {
-            print(path + " : " + paths[path]);
-        }
-
 		steals.forEach(function(stealOpts){
 			codez.push(convert(stealOpts.text, stealOpts.id, directory))
 			srcs.push(stealOpts.rootSrc+'')
@@ -54,10 +49,6 @@ steal('steal',function( steal ) {
 				// prodLocation
 				var rootImagePath = steal.URI(cssLoc).join(part),
 					fin = steal.URI(prodLocation).pathTo(steal.idToUri(rootImagePath).path);
-                print('prodLocation', prodLocation);
-                print('cssLoc', cssLoc);
-                print('rootImagePath', rootImagePath);
-                print('fin', fin);
 				return "url(" + fin + ")";
 			});
 		return newCSS;

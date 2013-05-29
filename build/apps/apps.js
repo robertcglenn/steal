@@ -161,7 +161,7 @@ steal('steal',
 				window.steal.one("end", function(rootSteal){
 
 					options.appFiles.push(  apps.addDependencies(rootSteal.dependencies[0], options, appName )  );
-					
+
 					// set back steal
 					window.steal = curSteal;
 					callback(options, {
@@ -176,12 +176,14 @@ steal('steal',
 			} else {
 				steal.print("  opening " + ( appName || html) );
 				steal.build.open(html, data, function(opener){
-					steal.print("  adding dependencies");
+                    steal.print("  adding dependencies");
+
 					if(options.multipleOpens){
 						var firstDependency = opener.rootSteal.dependencies[3]
 					} else {
 						var firstDependency = opener.rootSteal;
 					}
+                    steal.config('paths', window.stealconfig.paths);
 					var appFile = apps.addDependencies(firstDependency, options, appName );
 					options.appFiles.push(  appFile  );
 					options.steal = opener.steal;
@@ -237,12 +239,13 @@ steal('steal',
 					if( id && resource.options.buildType != 'fn' ) {
 						// some might not have source yet
 						steal.print("  + "+id );
-						
 						// convert using steal's root because that might have been configured
 						var source = resource.options.text ||  readFile( steal.idToUri( resource.options.id ) );
 					}
 					resource.options.text = resource.options.text || source
-					
+					if(resource.options.id && !resource.options.text) {
+                        print("    * WARNING * Reading " + steal.idToUri(resource.options.id) + " returned empty data.")
+                    }
 					// this becomes data
 					return {
 						// todo, might need to merge options
@@ -260,8 +263,9 @@ steal('steal',
 			if(id && appName && file.appNames.indexOf(appName) == -1){
 				file.appNames.push(appName);
 			}
-			
-			resource.needsDependencies.forEach(function(dependency){
+
+
+            resource.needsDependencies.forEach(function(dependency){
 				// TODO: check status
 				if (dependency && dependency.dependencies && 
 					// don't follow functions
@@ -571,7 +575,7 @@ steal('steal',
 					
 					
 				}
-				
+
 				//the source of the package
 				var pack = steal.build.js.makePackage(filesForPackaging, dependencies,packageName+ ".css", options.exclude)
 

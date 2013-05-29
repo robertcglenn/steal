@@ -264,7 +264,8 @@ steal('steal',function(s){
 				firstSteal : s.build.open.firstSteal(rootSteal)
 			})
 		};
-		
+        var stealconfig = window.stealconfig = {};
+
 		Envjs(url, {
 			scriptTypes: {
 				"text/javascript": true,
@@ -282,6 +283,13 @@ steal('steal',function(s){
 					window.jQuery && jQuery.holdReady(true);
 				},
 				"steal.js": function(script){
+                    var originalConfigFunction = window.steal.config;
+                    window.steal.config = function() {
+                        var result = originalConfigFunction.apply(window.steal, arguments);
+                        stealconfig.paths = originalConfigFunction.call(window.steal, 'paths');
+                        return result;
+                    }
+
 					if(stealData.skipAll){
 						window.steal.config({
 							types: {
@@ -320,14 +328,14 @@ steal('steal',function(s){
 			},
 			dontPrintUserAgent: true
 		});
-		
-		// set back steal
-		
+
+        // set back steal
 		window.steal = oldSteal;
+
 		// TODO: is this needed anymore
 		window.steal._steal = newSteal;
 
-		Envjs.wait();
+        Envjs.wait();
 	};
 	steal.build.open.firstSteal =function(rootSteal){
 		var stel;

@@ -2404,13 +2404,12 @@
 			h.each(paths, function (part, replaceWith) {
 				path = "" + id;
 				// if path ends in / only check first part of id
-				if ((h.endsInSlashRegex.test(part) && path.indexOf(part) == 0) ||
+				if (path.indexOf(part) == 0 ||
 				// or check if its a full match only
 				path === part) {
 					id = URI(path.replace(part, replaceWith));
 				}
 			})
-
 			return noJoin ? id : config.attr().root.join(id)
 		}
 

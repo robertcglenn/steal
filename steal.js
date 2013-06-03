@@ -1001,7 +1001,7 @@
 		 * This lets you use `define([id], [deps...], definition)` and
 		 * `require([deps], definition)`.
 		 */
-		amd: false
+		amd: true
 		/**
 	 * @property steal.config.map
 	 * @parent steal.config
@@ -2476,29 +2476,50 @@
 			 *     <script type="text/javascript" src="steal/steal.js"></script>
 			 *
 			 */
-			h.win.define = function (moduleId, dependencies, method) {
-				if (typeof moduleId == 'function') {
-					modules[URI.cur + ""] = moduleId();
-				} else if (!method && dependencies) {
-					if (typeof dependencies == "function") {
-						modules[moduleId] = dependencies();
-					} else {
-						modules[moduleId] = dependencies;
-					}
+			h.win.define = function () {
 
-				} else if (dependencies && method && !dependencies.length) {
-					modules[moduleId] = method();
-				} else {
-					st.apply(null, h.map(dependencies, function (dependency) {
-						dependency = typeof dependency === "string" ? {
-							id: dependency
-						} : dependency;
-						dependency.toId = st.amdToId;
+                var dependencies, factory, module;
+                for (var i = 0; i < arguments.length; i++) {
+                    var arg = arguments[i],
+                        type = typeof arg;
+                    if (type === 'function') {
+                        factory = arg;
+                    } else if (type === 'string') {
+                        module = arg;
+                    } else if (type === 'object' && arg.length) {
+                        dependencies = arg;
+                    }
+                }
 
-						dependency.idToUri = st.amdIdToUri;
-						return dependency;
-					}).concat(method))
-				}
+                if(module) {
+                    modules[module] = typeof factory === 'function' ? factory() : factory;
+                } else {
+                    steal.apply(null, (dependencies || []).concat(factory));
+                }
+
+
+//				if (typeof moduleId == 'function') {
+//					modules[URI.cur + ""] = moduleId();
+//				} else if (!method && dependencies) {
+//					if (typeof dependencies == "function") {
+//						modules[moduleId] = dependencies();
+//					} else {
+//						modules[moduleId] = dependencies;
+//					}
+//
+//				} else if (dependencies && method && !dependencies.length) {
+//					modules[moduleId] = method();
+//				} else {
+//					st.apply(null, h.map(dependencies, function (dependency) {
+//						dependency = typeof dependency === "string" ? {
+//							id: dependency
+//						} : dependency;
+//						dependency.toId = st.amdToId;
+//
+//						dependency.idToUri = st.amdIdToUri;
+//						return dependency;
+//					}).concat(method))
+//				}
 
 			}
 			/**
@@ -2516,16 +2537,17 @@
 			 *
 			 */
 			h.win.require = function (dependencies, method) {
-				var depends = h.map(dependencies, function (dependency) {
-					dependency = typeof dependency === "string" ? {
-						id: dependency
-					} : dependency;
-					dependency.toId = st.amdToId;
-
-					dependency.idToUri = st.amdIdToUri;
-					return dependency;
-				}).concat([method]);
-				st.apply(null, depends)
+                h.win.define(dependencies, method);
+//				var depends = h.map(dependencies, function (dependency) {
+//					dependency = typeof dependency === "string" ? {
+//						id: dependency
+//					} : dependency;
+//					dependency.toId = st.amdToId;
+//
+//					dependency.idToUri = st.amdIdToUri;
+//					return dependency;
+//				}).concat([method]);
+//				st.apply(null, depends)
 			}
 			h.win.define.amd = {
 				jQuery: true

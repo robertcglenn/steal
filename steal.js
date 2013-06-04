@@ -23,6 +23,10 @@
 		return h.win.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
 	};
 
+    function registerModule(modules, moduleId, module) {
+        modules[moduleId] = module;
+    }
+
 	// ## Helpers ##
 	// The following are a list of helper methods used internally to steal
 
@@ -1508,7 +1512,7 @@
 				// determination until later
 				if (!modules[id] && !modules[id + ".js"]) {
 					// If we haven't loaded, cache the module
-					modules[id] = module;
+					registerModule(modules,id,module);
 				} else {
 
 					// Otherwise get the cached module
@@ -1608,6 +1612,7 @@
 								// register this module ....
 								cur.value = ret;
 							}
+                            cur.factory = options;
 							return ret;
 						},
 						id: uri,
@@ -1918,7 +1923,7 @@
 					// this mapping is to move a config'd key
 
 					if (id !== newId) {
-						modules[newId] = this;
+						registerModule(modules,newId,this);
 						// TODO: remove the old one ....
 					}
 					this.options.buildType = buildType;
@@ -2447,6 +2452,12 @@
 		};
 
 
+        st.factoryFor = function(id) {
+            id = URI(id);
+            id.normalize();
+            return st.resources["" + id].factory;
+        }
+
 		// AMD is not available for now. If you want to use AMD features with
 		// steal you can by setting the `amd` param to true:
 		//
@@ -2492,35 +2503,14 @@
                 }
 
                 if(module) {
-                    modules[module] = typeof factory === 'function' ? factory() : factory;
+                    registerModule(modules, module, typeof factory === 'function' ? factory() : factory);
                 } else {
-                    steal.apply(null, (dependencies || []).concat(factory));
+                    dependencies = dependencies || [];
+                    for(var i = 0; i < dependencies.length; i++) {
+                        dependencies[i] = st.amdIdToUri(dependencies[i]).path;
+                    }
+                    steal.apply(null, dependencies.concat(factory));
                 }
-
-
-//				if (typeof moduleId == 'function') {
-//					modules[URI.cur + ""] = moduleId();
-//				} else if (!method && dependencies) {
-//					if (typeof dependencies == "function") {
-//						modules[moduleId] = dependencies();
-//					} else {
-//						modules[moduleId] = dependencies;
-//					}
-//
-//				} else if (dependencies && method && !dependencies.length) {
-//					modules[moduleId] = method();
-//				} else {
-//					st.apply(null, h.map(dependencies, function (dependency) {
-//						dependency = typeof dependency === "string" ? {
-//							id: dependency
-//						} : dependency;
-//						dependency.toId = st.amdToId;
-//
-//						dependency.idToUri = st.amdIdToUri;
-//						return dependency;
-//					}).concat(method))
-//				}
-
 			}
 			/**
 			 * @function window.require
@@ -2538,16 +2528,6 @@
 			 */
 			h.win.require = function (dependencies, method) {
                 h.win.define(dependencies, method);
-//				var depends = h.map(dependencies, function (dependency) {
-//					dependency = typeof dependency === "string" ? {
-//						id: dependency
-//					} : dependency;
-//					dependency.toId = st.amdToId;
-//
-//					dependency.idToUri = st.amdIdToUri;
-//					return dependency;
-//				}).concat([method]);
-//				st.apply(null, depends)
 			}
 			h.win.define.amd = {
 				jQuery: true
@@ -3046,7 +3026,7 @@
 							// not sure if these should be from needs
 							var args = [];
 							h.each(options.needs || [], function (i, id) {
-								args.push(Module.make(id).value);
+								args.push(Module.make({id: id}).value);
 							});
 
 							if (typeof exports === "function") {

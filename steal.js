@@ -2534,13 +2534,16 @@
 			}
 
 			// expose steal as AMD module
-			define("steal", [], function () {
-				return st;
-			});
-
-			define("require", function () {
-				return require;
-			})
+            // NOTE: define() should create Module objects, but the Module class is not available
+            // in the same scope as define(), so there are problems. Removing the calls for now so
+            // that we can figure out a strategy to include them later IF THEY ARE NECESSARY
+//			define("steal", [], function () {
+//				return st;
+//			});
+//
+//			define("require", function () {
+//				return require;
+//			})
 
 		}
 

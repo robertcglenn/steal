@@ -3091,7 +3091,7 @@
 						path: to
 					};
 					h.each(modules, function (id, module) {
-						if (module.options.type != "fn") {
+						if (module.options && module.options.type != "fn") {
 							// TODO terrible
 							var buildType = module.options.buildType;
 							module.updateOptions();

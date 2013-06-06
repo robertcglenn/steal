@@ -1647,6 +1647,9 @@
 			complete: function () {
 				this.completed.resolve();
 			},
+            loaded: function(script) {
+                this.executed(script);
+            },
 			// After the script has been loaded and run
 			// - checks what has been stolen (in pending)
 			// - wires up pendings steal's deferreds to eventually complete this

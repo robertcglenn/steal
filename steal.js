@@ -2286,7 +2286,7 @@
 				// Grab env
 				env = parts[1];
 
-                if (env && ['development', 'production'].indexOf(env) > -1) {
+                if (env && (env === 'development' || env === 'production')) {
 					options.env = env;
 				}
 
@@ -2730,7 +2730,7 @@
 			// a dummy function to add things to after the stel is created, but before executed is called
 			preexecuted: function () {},
             loaded: function(script) {
-                this.executed(script);
+                return this.executed(script);
             },
 			/**
 			 * @hide

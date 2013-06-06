@@ -1647,9 +1647,6 @@
 			complete: function () {
 				this.completed.resolve();
 			},
-            loaded: function(script) {
-                this.executed(script);
-            },
 			// After the script has been loaded and run
 			// - checks what has been stolen (in pending)
 			// - wires up pendings steal's deferreds to eventually complete this
@@ -2732,6 +2729,9 @@
 			},
 			// a dummy function to add things to after the stel is created, but before executed is called
 			preexecuted: function () {},
+            loaded: function(script) {
+                this.executed(script);
+            },
 			/**
 			 * @hide
 			 * Signals that a resource's JS code has been run.  This is used

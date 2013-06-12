@@ -2453,8 +2453,7 @@
 
 
         st.factoryFor = function(id) {
-            id = URI(id);
-            id.normalize();
+            id = st.amdIdToUri(id);
             return st.resources["" + id].factory;
         }
 

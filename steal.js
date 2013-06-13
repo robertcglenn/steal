@@ -2443,6 +2443,9 @@
 			if (/(^|\/)[^\/\.]+$/.test(id)) {
 				id = URI(id + ".js")
 			}
+            if(typeof id === 'string') {
+                id = URI(id);
+            }
 			return id //noJoin ? id : config().root.join(id)
 		}
 

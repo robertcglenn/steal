@@ -239,10 +239,16 @@ steal('steal',
 					if( id && resource.options.buildType != 'fn' ) {
 						// some might not have source yet
 						// convert using steal's root because that might have been configured
-                        var uri = options.baseUrl + steal.idToUri(resource.options.id);
                         steal.print("  + "+id + " fetched from " + uri );
-                        var source = resource.options.text || readUrl(uri);
-						//var source = resource.options.text ||  readUrl( steal.idToUri( resource.options.id ) );
+                        var source = resource.options.text;
+                        if(!source) {
+                            var uri = options.baseUrl + steal.idToUri(resource.options.id);
+                            if(options.baseUrl) {
+                                source = readUrl(uri);
+                            } else {
+                                source = readFile(uri);
+                            }
+                        }
 					}
 					resource.options.text = resource.options.text || source
 					if(resource.options.id && !resource.options.text) {

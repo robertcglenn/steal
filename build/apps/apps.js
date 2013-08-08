@@ -238,13 +238,15 @@ steal('steal',
 					var source = '';
 					if( id && resource.options.buildType != 'fn' ) {
 						// some might not have source yet
-						steal.print("  + "+id );
 						// convert using steal's root because that might have been configured
-						var source = resource.options.text ||  readFile( steal.idToUri( resource.options.id ) );
+                        var uri = options.baseUrl + steal.idToUri(resource.options.id);
+                        steal.print("  + "+id + " fetched from " + uri );
+                        var source = resource.options.text || readUrl(uri);
+						//var source = resource.options.text ||  readUrl( steal.idToUri( resource.options.id ) );
 					}
 					resource.options.text = resource.options.text || source
 					if(resource.options.id && !resource.options.text) {
-                        print("    * WARNING * Reading " + steal.idToUri(resource.options.id) + " returned empty data.")
+                        print("    * WARNING * Reading " + uri + " returned empty data.")
                     }
 					// this becomes data
 					return {

@@ -6,6 +6,7 @@
 
 // TODO
 //  - make it able to work with specific files
+_PASSED_IN_ARGS = _args || {};
 
 if(!steal.build){
 	steal.build = {};	
@@ -23,7 +24,7 @@ steal('steal',
 	 * @param {Object} app
 	 */
 	steal.build.packages = function(app, buildOptions){
-		
+		var baseUrl = _PASSED_IN_ARGS.baseUri  || '';
 		// options for packaging
 		var options = {
 			// the files opened
@@ -31,7 +32,8 @@ steal('steal',
 			// each app's first file
 			appFiles : [],
 			// don't minify at first (will be faster)
-			minify : false
+			minify : false,
+            baseUrl: baseUrl
 		};
 		buildOptions = buildOptions || {};
 		buildOptions.depth = buildOptions.depth || Infinity;

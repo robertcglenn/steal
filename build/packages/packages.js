@@ -24,7 +24,10 @@ steal('steal',
 	 * @param {Object} app
 	 */
 	steal.build.packages = function(app, buildOptions){
-		var baseUrl = _PASSED_IN_ARGS.baseUri  || '';
+        var baseUrl = '';
+        if (typeof _PASSED_IN_ARGS == 'object' && _PASSED_IN_ARGS.baseUri) {
+           baseUrl = _PASSED_IN_ARGS.baseUri;
+        }
 		// options for packaging
 		var options = {
 			// the files opened

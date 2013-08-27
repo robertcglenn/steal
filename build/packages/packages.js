@@ -33,10 +33,6 @@ steal('steal',
              * @param {Object} app
              */
                 steal.build.packages = function (app, buildOptions) {
-                    var baseUrl = '';
-                    if (typeof _PASSED_IN_ARGS == 'object' && _PASSED_IN_ARGS.baseUrl) {
-                        baseUrl = _PASSED_IN_ARGS.baseUrl;
-                    }
                     // options for packaging
                     var options = {
                         // the files opened
@@ -45,7 +41,7 @@ steal('steal',
                         appFiles: [],
                         // don't minify at first (will be faster)
                         minify: false,
-                        baseUrl: baseUrl
+                        baseUrl: (_args && _args.baseUrl) ? _args.baseUrl : ''
                     };
                     buildOptions = buildOptions || {};
                     buildOptions.depth = buildOptions.depth || Infinity;

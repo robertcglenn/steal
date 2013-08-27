@@ -1675,6 +1675,12 @@ Envjs.uri = function(path, base, allow) {
     // 3rd arg is "false" --> remove fragments
     var newurl = urlparse.urlnormalize(urlparse.urljoin(base, path, allow ||false), allow);
 	//console.log('uri %s %s = %s', base, path, newurl);
+
+    // baseurl is passed as argument.
+    if (_args && _args.baseUrl && base && base.indexOf('file:///') > -1) {
+        newurl = newurl.replace('file:///' + Envjs.getcwd(), _args.baseUrl);
+    }
+
     return newurl;
 };
 

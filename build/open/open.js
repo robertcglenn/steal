@@ -181,7 +181,7 @@ steal('steal',function(s){
 		// clean up window in case this is the second time Envjs has opened the page
 		for(var n in window){
 			// TODO make this part of steal namespace
-			if(n !== "STEALPRINT"){
+			if(n !== "STEALPRINT" && n !== '_args'){
 				delete window[n];
 			}
 		}

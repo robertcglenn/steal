@@ -239,13 +239,20 @@ steal('steal',
                             // convert using steal's root because that might have been configured
                             var source = resource.options.text;
                             if (!source) {
-                                var uri = options.baseUrl + steal.idToUri(resource.options.id);
-                                if (options.baseUrl) {
-                                    source = readUrl(uri);
+                                var uri = steal.idToUri(resource.options.id);
+                                if (uri.host && uri.host.length > 0) {
+                                  source = readUrl(uri);
+                                  steal.print("  + " + id + " fetched from " + uri);
                                 } else {
-                                    source = readFile(uri);
+                                  uri = options.baseUrl + steal.idToUri(resource.options.id);
+                                  if (options.baseUrl) {
+                                      source = readUrl(uri);
+                                      steal.print("  + " + id + " fetched from " + uri);
+                                  } else {
+                                      source = readFile(uri);
+                                      steal.print("  + " + id + " read from " + uri);
+                                  }
                                 }
-                                steal.print("  + " + id + " fetched from " + uri);
                             }
                         }
                         resource.options.text = resource.options.text || source

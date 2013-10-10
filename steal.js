@@ -1516,7 +1516,7 @@
                 } else {
 
                     // Otherwise get the cached module
-                    var existingModule = modules[id];
+                    var existingModule = modules[id] || modules[id + '.js'];
                     // If options were passed, copy new properties over.
                     // Don't copy src, etc because those have already
                     // been changed to be the right values;

@@ -237,22 +237,19 @@ steal('steal',
                         if (id && resource.options.buildType != 'fn') {
                             // some might not have source yet
                             // convert using steal's root because that might have been configured
-                            var source = resource.options.text;
+                            var source = resource.options.text,
+                                uri = '' + steal.idToUri(resource.options.id);
+
                             if (!source) {
-                                var uri = steal.idToUri(resource.options.id);
-                                if (uri.host && uri.host.length > 0) {
-                                  source = readUrl(uri);
-                                  steal.print("  + " + id + " fetched from " + uri);
-                                } else {
-                                  uri = options.baseUrl + steal.idToUri(resource.options.id);
-                                  if (options.baseUrl) {
-                                      source = readUrl(uri);
-                                      steal.print("  + " + id + " fetched from " + uri);
-                                  } else {
-                                      source = readFile(uri);
-                                      steal.print("  + " + id + " read from " + uri);
-                                  }
+                                if (options.baseUrl && uri.indexOf(':') < 0) {
+                                    uri = options.baseUrl + uri;
                                 }
+                                if (uri.indexOf(':') >= 0) {
+                                    source = readUrl(uri);
+                                } else {
+                                    source = readFile(uri);
+                                }
+                                steal.print("  + " + id + " fetched from " + uri);
                             }
                         }
                         resource.options.text = resource.options.text || source

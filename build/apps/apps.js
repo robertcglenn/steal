@@ -230,11 +230,12 @@ steal('steal',
              */
             addDependencies: function (resource, options, appName) {
                 var id = resource.options.id,
+                    toBePackaged = resource.options.packaged,
                     buildType = resource.options.buildType,
                     file = maker(options.files, id || appName, function () {
                         //clean and minifify everything right away ...
                         var source = '';
-                        if (id && resource.options.buildType != 'fn') {
+                        if (id && resource.options.buildType != 'fn' && toBePackaged !== false) {
                             // some might not have source yet
                             // convert using steal's root because that might have been configured
                             var source = resource.options.text,

@@ -254,7 +254,7 @@ steal('steal',
                             }
                         }
                         resource.options.text = resource.options.text || source
-                        if (resource.options.id && !resource.options.text) {
+                        if (resource.options.id && !resource.options.text && toBePackaged !== false) {
                             print("    * WARNING * Reading " + uri + " returned empty data.")
                         }
                         // this becomes data

@@ -1580,10 +1580,12 @@
                     this.options = {
                         fn: function() {
 
-                            // Set the URI if there are steals
-                            // within the callback.
-                            console.log('1583 - URI.cur = ' + uri);
-                            URI.cur = uri;
+                            // NG-17429 - work around bug if uri is not to local server (ie thirdparty)
+                            if (uri.indexOf('http') !== 0) {
+                                // Set the URI if there are steals
+                                // within the callback.
+                                URI.cur = uri;
+                            }
 
                             // we should get the current "module"
                             // check it's listed dependencies and see

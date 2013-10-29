@@ -638,19 +638,32 @@
          *     files/a.js = loads //files/a.js
          */
         normalize: function(cur) {
+            var should_log = id.toString().indexOf('node_modules') !== -1;
+            if (should_log) {
+              console.log('normalize cur: ' + cur);
+              console.log('cur.dir() ' + cur.dir());
+              console.log('URI.cur.dir() ' + URI.cur.dir());
+              console.log('this.path ' + this.path);
+              console.log('URI(path) aka res ' + URI(path));
+            }
             cur = cur ? cur.dir() : URI.cur.dir();
+            if (should_log) console.log('normalize cur after dir(): ' + cur);
             var path = this.path,
                 res = URI(path);
             //if path is rooted from steal's root (DEPRECATED)
             if (!path.indexOf("//")) {
                 res = URI(path.substr(2));
+                if (should_log) console.log('!path.indexOf(//) ' + res);
             } else if (!path.indexOf("./")) { // should be relative
                 res = cur.join(path.substr(2));
+                if (should_log) console.log('!path.indexOf(./) ' + res);
             }
             // only if we start with ./ or have a /foo should we join from cur
             else if (this.isRelative()) {
                 res = cur.join(this.domain() + path)
+                if (should_log) console.log('this.isRelative() ' + res);
             }
+            if (should_log) console.log('res query ' + res.query + ' this.query ' + this.query);
             res.query = this.query;
             return res;
         },

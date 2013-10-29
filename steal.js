@@ -479,6 +479,7 @@
      * The current working directory / path.  Anything
      * loaded relative will be loaded relative to this.
      */
+    console.log('482 URI.cur = ' + URI());
     URI.cur = URI();
 
     /**
@@ -913,6 +914,7 @@
                     loc = cleaned.join(relativeURI);
 
                 // cur now points to the 'root' location, but from the page
+                console.log('916 URI.cur = ' + loc.pathTo(cleaned));
                 URI.cur = loc.pathTo(cleaned)
                 this.stealConfig.root = root;
                 return this;
@@ -1580,6 +1582,7 @@
 
                             // Set the URI if there are steals
                             // within the callback.
+                            console.log('1583 - URI.cur = ' + uri);
                             URI.cur = uri;
 
                             // we should get the current "module"
@@ -1678,6 +1681,7 @@
                 // we need id vs rootSrc ...
 
                 if (this.options.id) {
+                    console.log('1682 URI.cur = ' + URI(this.options.id) + ' but could be set to ' + (this.options.rootSrc) ? URI(this.options.rootSrc) : 'no rootSrc');
                     URI.cur = URI(this.options.id);
                 }
                 if (this.exports) {
@@ -2011,6 +2015,7 @@
                 // mark everything in has loaded
                 h.each(this.options.has, function(i, has) {
                     // don't want the current file to change, since we're just marking files as loaded
+                    console.log('2016 URI.cur = ' + URI(current));
                     URI.cur = URI(current);
                     steal.executed(has);
                 });

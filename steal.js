@@ -2337,12 +2337,13 @@
             // for a given id/path, what is the "REAL" id that should be used
             // this is where substituation can happen
             st.id = function(id, currentWorkingId, type) {
-                console.log('st.id id == ' + id + ' ' + currentWorkingId);
+                var should_log = id.toString().indexOf('node_modules') !== -1;
+                if (should_log) console.log('st.id id == ' + id + ' ' + currentWorkingId);
                 // id should be like
                 var uri = URI(id);
-                console.log('st.id uri == ' + uri);
+                if (should_log) console.log('st.id uri == ' + uri);
                 uri = uri.addJS().normalize(currentWorkingId ? new URI(currentWorkingId) : null)
-                console.log('st.id uri after normalize == ' + uri);
+                if (should_log) console.log('st.id uri after normalize == ' + uri);
                 // check foo/bar
                 if (!type) {
                     type = "js"
@@ -2357,19 +2358,19 @@
                 h.each(map, function(loc, maps) {
                     // is the current working id matching loc
                     if (h.matchesId(loc, currentWorkingId)) {
-                        console.log('h.matchesId loc ' + loc + ' currentWorkingId ' + currentWorkingId);
+                        if (should_log) console.log('h.matchesId loc ' + loc + ' currentWorkingId ' + currentWorkingId);
                         // run maps
                         h.each(maps, function(part, replaceWith) {
-                            console.log('h.each(maps ... ' + part + ' ' + replaceWith);
+                            if (should_log) console.log('h.each(maps ... ' + part + ' ' + replaceWith);
                             if (("" + uri).indexOf(part) == 0) {
-                                console.log('st.id replace ' + part + ' ' + replaceWith);
+                                if (should_log) console.log('st.id replace ' + part + ' ' + replaceWith);
                                 uri = URI(("" + uri).replace(part, replaceWith))
                             }
                         })
                     }
                 })
 
-                console.log('st.id returning uri == ' + uri);
+                if (should_log) console.log('st.id returning uri == ' + uri);
 
                 return uri;
             }

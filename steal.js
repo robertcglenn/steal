@@ -1586,6 +1586,8 @@
                                 // within the callback.
                                 console.log('1587 URI.cur = ' + JSON.stringify(uri));
                                 URI.cur = uri;
+                            } else {
+                                console.log('CYMEN not setting URI.cur for ' + JSON.stringify(uri));
                             }
 
                             // we should get the current "module"

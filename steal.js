@@ -1581,7 +1581,7 @@
                         fn: function() {
 
                             // NG-17429 - work around bug if uri is not to local server (ie thirdparty)
-                            if (!uri || uri.protocol === 'http') {
+                            if (!uri || !(uri.protocol && uri.protocol === 'http')) {
                                 // Set the URI if there are steals
                                 // within the callback.
                                 console.log('1587 URI.cur = ' + JSON.stringify(uri));

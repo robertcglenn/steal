@@ -638,7 +638,7 @@
          *     files/a.js = loads //files/a.js
          */
         normalize: function(cur) {
-            var should_log = cur.toString().indexOf('node_modules') !== -1;
+            var should_log = this.path.toString().indexOf('node_modules') !== -1;
             if (should_log) {
               console.log('normalize cur: ' + cur);
               console.log('cur.dir() ' + cur.dir());

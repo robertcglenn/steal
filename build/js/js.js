@@ -194,7 +194,7 @@ steal('steal','steal/build/css',function( steal ) {
 		// add to dependencies
 		if(csses.length && dependencies){
 			dependencies[cssPackage] = csses.map(function(css){
-				return css.id;
+				return (css.rootSrc.indexOf('/') === 0) ? css.rootSrc.slice(1) : css.rootSrc;
 			})
 		}
 		

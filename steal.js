@@ -641,10 +641,7 @@
             var should_log = id.toString().indexOf('node_modules') !== -1;
             if (should_log) {
               console.log('normalize cur: ' + cur);
-              console.log('cur.dir() ' + cur.dir());
-              console.log('URI.cur.dir() ' + URI.cur.dir());
               console.log('this.path ' + this.path);
-              console.log('URI(path) aka res ' + URI(path));
             }
             cur = cur ? cur.dir() : URI.cur.dir();
             if (should_log) console.log('normalize cur after dir(): ' + cur);

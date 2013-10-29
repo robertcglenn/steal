@@ -641,8 +641,8 @@
             var should_log = this.path.toString().indexOf('node_modules') !== -1;
             if (should_log) {
               console.log('normalize cur: ' + cur);
-              console.log('cur.dir() ' + cur.dir());
-              console.log('URI.cur.dir() ' + URI.cur.dir());
+              if (cur.dir) console.log('cur.dir() ' + cur.dir());
+              if (URI.cur && URI.cur.dir) console.log('URI.cur.dir() ' + URI.cur.dir());
               console.log('this.path ' + this.path);
               console.log('URI(path) aka res ' + URI(path));
             }

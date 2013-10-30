@@ -662,14 +662,15 @@
             }
             // only if we start with ./ or have a /foo should we join from cur
             else if (this.isRelative()) {
+                res = cur.join(this.domain() + path)
+                if (should_log) console.log('this.isRelative() ' + res);
+
                 // THIS IS WHERE IT ALL GOES TO CRAP -- wrong server
                 if (should_log) {
                   console.log(' **BAD** this ' + JSON.stringify(this));
                   console.log(' **BAD** this.domain() + path ' + JSON.stringify(this.domain()) + ' ' + JSON.stringify(path));
-                  console.log(' **BAD** res ' + JSON.stringify(cur.join(this.domain() + path)));
+                  console.log(' **BAD** res ' + JSON.stringify(res));
                 }
-                res = cur.join(this.domain() + path)
-                if (should_log) console.log('this.isRelative() ' + res);
             }
             if (should_log) console.log('res query ' + res.query + ' this.query ' + this.query);
             res.query = this.query;

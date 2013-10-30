@@ -653,10 +653,7 @@
             var path = this.path,
                 res = URI(path);
             //if path is rooted from steal's root (DEPRECATED)
-            if (URI.cur.toString().indexOf('http')) {
-                res = URI(this.path);
-                console.log(' **CYMEN** res == ' + JSON.stringify(res) + ' this.path: ' + JSON.stringify(this));
-            } else if (!path.indexOf("//")) {
+            if (!path.indexOf("//")) {
                 res = URI(path.substr(2));
                 if (should_log) console.log('!path.indexOf(//) ' + res);
             } else if (!path.indexOf("./")) { // should be relative
@@ -665,11 +662,18 @@
             }
             // only if we start with ./ or have a /foo should we join from cur
             else if (this.isRelative()) {
+                // THIS IS WHERE IT ALL GOES TO CRAP -- wrong server
+                if (should_log) {
+                  console.log(' **BAD** this ' + JSON.stringify(this));
+                  console.log(' **BAD** this.domain() + path ' + JSON.stringify(this.domain()) + ' ' + JSON.stringify(path));
+                  console.log(' **BAD** res ' + JSON.stringify(cur.join(this.domain() + path)));
+                }
                 res = cur.join(this.domain() + path)
                 if (should_log) console.log('this.isRelative() ' + res);
             }
             if (should_log) console.log('res query ' + res.query + ' this.query ' + this.query);
             res.query = this.query;
+            console.log(' **ZING** normalize returning: ' + JSON.stringify(res));
             return res;
         },
         /**

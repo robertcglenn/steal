@@ -914,7 +914,7 @@
                     loc = cleaned.join(relativeURI);
 
                 // cur now points to the 'root' location, but from the page
-                console.log('916 URI.cur = ' + loc.pathTo(cleaned));
+                console.log('916 URI.cur = ' + JSON.stringify(loc.pathTo(cleaned)));
                 URI.cur = loc.pathTo(cleaned)
                 this.stealConfig.root = root;
                 return this;

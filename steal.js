@@ -639,7 +639,7 @@
          *     files/a.js = loads //files/a.js
          */
         normalize: function(cur) {
-            console.log(' ::normalize:: this.path ' + this.path + ' URI.cur ' + URI.cur);
+            console.log(' ::normalize:: this.path ' + JSON.stringify(this) + ' URI.cur ' + JSON.stringify(URI.cur));
             var should_log = this.path.toString().indexOf('node_modules') !== -1;
             if (should_log) {
               console.log('normalize cur: ' + cur);
@@ -653,9 +653,9 @@
             var path = this.path,
                 res = URI(path);
             //if path is rooted from steal's root (DEPRECATED)
-            if (path.indexOf('http') === 0) {
+            if (URI.cur.toString.indexOf('http')) {
                 res = URI(this.path);
-                console.log(' **CYMEN** res == ' + JSON.stringify(res) + ' this.path: ' + JSON.stringify(this.path));
+                console.log(' **CYMEN** res == ' + JSON.stringify(res) + ' this.path: ' + JSON.stringify(this));
             } else if (!path.indexOf("//")) {
                 res = URI(path.substr(2));
                 if (should_log) console.log('!path.indexOf(//) ' + res);

@@ -479,6 +479,7 @@
      * The current working directory / path.  Anything
      * loaded relative will be loaded relative to this.
      */
+    console.log('482 URI.cur = ' + JSON.stringify(URI()));
     URI.cur = URI();
 
     /**
@@ -638,19 +639,33 @@
          *     files/a.js = loads //files/a.js
          */
         normalize: function(cur) {
+            console.log(' ::normalize:: this.path ' + this.path + ' URI.cur ' + URI.cur);
+            var should_log = this.path.toString().indexOf('node_modules') !== -1;
+            if (should_log) {
+              console.log('normalize cur: ' + cur);
+              if (cur && cur.dir) console.log('cur.dir() ' + cur.dir());
+              if (URI.cur && URI.cur.dir) console.log('URI.cur.dir() ' + URI.cur.dir());
+              console.log('this.path ' + this.path);
+              console.log('URI(path) aka res ' + URI(path));
+            }
             cur = cur ? cur.dir() : URI.cur.dir();
+            if (should_log) console.log('normalize cur after dir(): ' + cur);
             var path = this.path,
                 res = URI(path);
             //if path is rooted from steal's root (DEPRECATED)
             if (!path.indexOf("//")) {
                 res = URI(path.substr(2));
+                if (should_log) console.log('!path.indexOf(//) ' + res);
             } else if (!path.indexOf("./")) { // should be relative
                 res = cur.join(path.substr(2));
+                if (should_log) console.log('!path.indexOf(./) ' + res);
             }
             // only if we start with ./ or have a /foo should we join from cur
             else if (this.isRelative()) {
                 res = cur.join(this.domain() + path)
+                if (should_log) console.log('this.isRelative() ' + res);
             }
+            if (should_log) console.log('res query ' + res.query + ' this.query ' + this.query);
             res.query = this.query;
             return res;
         },
@@ -899,6 +914,7 @@
                     loc = cleaned.join(relativeURI);
 
                 // cur now points to the 'root' location, but from the page
+                console.log('916 URI.cur = ' + JSON.stringify(loc.pathTo(cleaned)));
                 URI.cur = loc.pathTo(cleaned)
                 this.stealConfig.root = root;
                 return this;
@@ -1564,9 +1580,15 @@
                     this.options = {
                         fn: function() {
 
-                            // Set the URI if there are steals
-                            // within the callback.
-                            URI.cur = uri;
+                            // NG-17429 - work around bug if uri is not to local server (ie thirdparty)
+                            if (!uri || !(uri.protocol && uri.protocol === 'http')) {
+                                // Set the URI if there are steals
+                                // within the callback.
+                                console.log('1587 URI.cur = ' + JSON.stringify(uri));
+                                URI.cur = uri;
+                            } else {
+                                console.log('CYMEN not setting URI.cur for ' + JSON.stringify(uri));
+                            }
 
                             // we should get the current "module"
                             // check it's listed dependencies and see
@@ -1664,6 +1686,7 @@
                 // we need id vs rootSrc ...
 
                 if (this.options.id) {
+                    console.log('1682 URI.cur = ' + JSON.stringify(URI(this.options.id)) + ' but could be set to ' + (this.options.rootSrc) ? URI(this.options.rootSrc) : 'no rootSrc');
                     URI.cur = URI(this.options.id);
                 }
                 if (this.exports) {
@@ -1997,6 +2020,7 @@
                 // mark everything in has loaded
                 h.each(this.options.has, function(i, has) {
                     // don't want the current file to change, since we're just marking files as loaded
+                    console.log('2016 URI.cur = ' + JSON.stringify(URI(current)));
                     URI.cur = URI(current);
                     steal.executed(has);
                 });
@@ -2337,9 +2361,13 @@
             // for a given id/path, what is the "REAL" id that should be used
             // this is where substituation can happen
             st.id = function(id, currentWorkingId, type) {
+                var should_log = id.toString().indexOf('node_modules') !== -1;
+                if (should_log) console.log('st.id id == ' + id + ' ' + currentWorkingId);
                 // id should be like
                 var uri = URI(id);
+                if (should_log) console.log('st.id uri == ' + uri);
                 uri = uri.addJS().normalize(currentWorkingId ? new URI(currentWorkingId) : null)
+                if (should_log) console.log('st.id uri after normalize == ' + uri);
                 // check foo/bar
                 if (!type) {
                     type = "js"
@@ -2354,14 +2382,19 @@
                 h.each(map, function(loc, maps) {
                     // is the current working id matching loc
                     if (h.matchesId(loc, currentWorkingId)) {
+                        if (should_log) console.log('h.matchesId loc ' + loc + ' currentWorkingId ' + currentWorkingId);
                         // run maps
                         h.each(maps, function(part, replaceWith) {
+                            if (should_log) console.log('h.each(maps ... ' + part + ' ' + replaceWith);
                             if (("" + uri).indexOf(part) == 0) {
+                                if (should_log) console.log('st.id replace ' + part + ' ' + replaceWith);
                                 uri = URI(("" + uri).replace(part, replaceWith))
                             }
                         })
                     }
                 })
+
+                if (should_log) console.log('st.id returning uri == ' + uri);
 
                 return uri;
             }

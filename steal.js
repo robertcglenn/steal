@@ -653,7 +653,10 @@
             var path = this.path,
                 res = URI(path);
             //if path is rooted from steal's root (DEPRECATED)
-            if (!path.indexOf("//")) {
+            if (path.indexOf('http') === 0) {
+                res = URI(this.path);
+                console.log(' **CYMEN** res == ' + JSON.stringify(res) + ' this.path: ' + JSON.stringify(this.path));
+            } else if (!path.indexOf("//")) {
                 res = URI(path.substr(2));
                 if (should_log) console.log('!path.indexOf(//) ' + res);
             } else if (!path.indexOf("./")) { // should be relative

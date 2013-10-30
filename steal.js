@@ -653,7 +653,7 @@
             var path = this.path,
                 res = URI(path);
             //if path is rooted from steal's root (DEPRECATED)
-            if (URI.cur.toString.indexOf('http')) {
+            if (URI.cur.toString().indexOf('http')) {
                 res = URI(this.path);
                 console.log(' **CYMEN** res == ' + JSON.stringify(res) + ' this.path: ' + JSON.stringify(this));
             } else if (!path.indexOf("//")) {

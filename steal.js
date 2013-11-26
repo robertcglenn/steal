@@ -1383,7 +1383,7 @@
                         lastSheet = h.doc.createStyleSheet(options.src);
                         lastSheetOptions = options;
                     } else {
-                        var relative = "" + URI(URI(lastSheetOptions.src).dir()).pathTo(options.src);
+                        var relative = URI(options.src).toString();
                         lastSheet.addImport(relative);
                         if (cssCount == 30) {
                             cssCount = 0;

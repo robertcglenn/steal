@@ -81,10 +81,14 @@ steal.dev = {
 		}
 	},
 	_logger:function(type, arr){
-		if(console.log.apply){
-			console[type].apply(console, arr)
-		} else {
-			console[type](arr)
+		try {
+			if(console.log.apply){
+				console[type].apply(console, arr)
+			} else {
+				console[type](arr)
+			}			
+		} catch (e) {
+			console[type](arr);
 		}
 	} 
 };

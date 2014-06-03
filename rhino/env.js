@@ -8757,6 +8757,15 @@ HTMLAnchorElement = function(ownerDocument) {
 };
 HTMLAnchorElement.prototype = new HTMLElement();
 __extend__(HTMLAnchorElement.prototype, {
+    get pathname() {
+      var uri = Envjs.urlsplit(this.href);
+      return uri.path;
+    },
+    set pathname(val) {
+      var uri = Envjs.urlsplit(this.href);
+      uri.path = val
+      this.href(uri.urlunsplit(uri));
+    },
     get accessKey() {
         return this.getAttribute("accesskey")||'';
     },

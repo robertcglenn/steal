@@ -8183,6 +8183,15 @@ __extend__(HTMLElement.prototype, {
     set id(id){
         this.setAttribute('id', id);
     },
+    get pathname() {
+        var uri = Envjs.urlsplit(this.href);
+        return uri.path;
+    },
+    set pathname(val) {
+        var uri = Envjs.urlsplit(this.href);
+        uri.path = val
+        this.href(uri.urlunsplit(uri));
+    },
     get innerHTML(){
         var ret = "",
         i;
